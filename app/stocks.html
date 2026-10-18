@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0d0f; --panel: #131417; --panel-2: #181a1e; --line: #23262c; --line-2: #2d3138;
+  --ink: #ecedef; --ink-2: #9a9da5; --ink-3: #686b73;
+  --up: #22c38e; --up-bg: rgba(34,195,142,.12); --down: #f0565a; --down-bg: rgba(240,86,90,.12);
+  --c1: #e9b949; --c2: #9b8cff; --c3: #4ba3ff; --accent: #22c38e;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.4 Inter, system-ui, -apple-system, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+.wrap { padding: 14px 16px 24px; max-width: 1480px; margin: 0 auto; }
+.num { font-variant-numeric: tabular-nums; }
+.up { color: var(--up); } .down { color: var(--down); } .muted { color: var(--ink-2); } .dim { color: var(--ink-3); }
+
+/* top bar */
+.top { display: flex; align-items: center; gap: 28px; padding: 4px 4px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
+.logo { width: 32px; height: 32px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; }
+.nav { display: flex; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav button { white-space: nowrap; }
+.nav button { background: none; border: 0; padding: 7px 12px; border-radius: 8px; color: var(--ink-2); cursor: pointer; }
+.nav button:hover { color: var(--ink); background: var(--panel-2); }
+.nav button.on { color: var(--ink); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+.search { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 220px; }
+.search input { background: none; border: 0; outline: 0; width: 100%; }
+.asof { font-size: 12px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
+
+/* index cards */
+.cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px; cursor: pointer; text-align: left; transition: border-color .15s; }
+.card:hover, .card.on { border-color: var(--line-2); background: var(--panel-2); }
+.card .t { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .p { font-size: 22px; font-weight: 600; margin: 10px 0 2px; letter-spacing: -.01em; }
+.card .row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; }
+
+/* strip */
+.strip { display: grid; grid-template-columns: auto repeat(4, minmax(0, 1fr)); margin-top: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.strip > div { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-left: 1px solid var(--line); cursor: pointer; min-width: 0; }
+.strip > div:first-child { border-left: 0; cursor: default; color: var(--ink-2); font-size: 12px; }
+.strip > div:not(:first-child):hover { background: var(--panel-2); }
+.arrow { font-size: 18px; font-weight: 600; width: 18px; text-align: center; }
+.strip .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* main grid */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; margin-top: 12px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.chart-panel { padding: 16px 18px 6px; min-width: 0; }
+.crumb { font-size: 12px; color: var(--ink-2); letter-spacing: .03em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; }
+.crumb b { color: var(--ink); font-weight: 600; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+.big { font-size: 30px; font-weight: 600; letter-spacing: -.02em; }
+.sub { color: var(--ink-2); font-size: 12px; margin-top: 4px; }
+.ranges { display: flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; gap: 2px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.ranges button { background: none; border: 0; padding: 5px 10px; border-radius: 7px; color: var(--ink-2); cursor: pointer; font-size: 12px; }
+.ranges button.on { background: var(--panel-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 0 4px; font-size: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 10px; background: var(--panel-2); }
+.chip i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+.chip button { background: none; border: 0; cursor: pointer; color: var(--ink-3); padding: 0 6px; font-size: 14px; line-height: 1; }
+.chip button:hover { color: var(--ink); }
+.chip.main { padding-right: 10px; }
+select.add { background: var(--panel-2); border: 1px dashed var(--line-2); border-radius: 999px; padding: 4px 10px; color: var(--ink-2); cursor: pointer; }
+.note { font-size: 11px; color: var(--ink-3); margin-left: auto; }
+svg text { fill: var(--ink-3); font-size: 11px; font-family: Inter, system-ui, sans-serif; }
+#chart { width: 100%; height: 340px; display: block; }
+.tip { position: absolute; pointer-events: none; background: #1d2025; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; white-space: nowrap; box-shadow: 0 6px 24px rgba(0,0,0,.4); display: none; z-index: 5; }
+.tip .d { color: var(--ink-2); margin-bottom: 4px; }
+.tip .r { display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+.tip .r i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.chartbox { position: relative; }
+
+/* table */
+.tbl-wrap { border-top: 1px solid var(--line); margin: 6px -18px 0; max-height: 330px; overflow: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { position: sticky; top: 0; background: var(--panel); text-align: right; font-weight: 500; color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 10px 14px; cursor: pointer; user-select: none; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:nth-child(-n+2) { text-align: left; }
+th.sorted { color: var(--ink); }
+td { padding: 9px 14px; text-align: right; border-bottom: 1px solid #1a1c20; white-space: nowrap; }
+td:nth-child(-n+2) { text-align: left; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--panel-2); }
+tbody tr.sel { background: #1a1d22; box-shadow: inset 2px 0 0 var(--accent); }
+td .tk { color: var(--ink-3); font-size: 11px; margin-left: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+.pill.up { background: var(--up-bg); box-shadow: inset 0 0 0 1px rgba(34,195,142,.35); }
+.pill.down { background: var(--down-bg); box-shadow: inset 0 0 0 1px rgba(240,86,90,.35); }
+input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+.exp-bar { display: inline-block; height: 4px; border-radius: 2px; background: #4ba3ff; vertical-align: middle; margin-right: 6px; opacity: .85; }
+
+/* discover */
+.discover { padding: 14px; }
+.discover h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.discover .cap { color: var(--ink-3); font-size: 11px; margin: 3px 0 12px; }
+.minis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mini { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; cursor: pointer; min-width: 0; text-align: left; }
+.mini:hover { border-color: var(--line-2); }
+.mini .h { display: flex; justify-content: space-between; gap: 6px; align-items: flex-start; }
+.mini .n { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini .tag { font-size: 10px; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+.mini .p { font-size: 16px; font-weight: 600; margin: 8px 0 2px; }
+.mini svg { width: 100%; height: 46px; display: block; }
+.mini .badge { font-size: 10px; color: #8cc6ff; }
+.foot { color: var(--ink-3); font-size: 11px; margin-top: 14px; line-height: 1.6; }
+.foot code { color: var(--ink-2); }
+
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; }
+  .minis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card .row { flex-wrap: wrap; gap: 4px; }
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip > div:first-child { grid-column: 1 / -1; border-bottom: 1px solid var(--line); }
+  .minis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search { min-width: 0; order: 4; flex-basis: 100%; }
+  .brand { flex: 1; }
+  .top { gap: 12px; }
+  .nav { order: 3; flex-basis: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0c0d0f" stroke-width="2.4" stroke-linecap="round"><path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 20c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M7 9l4-5 3 3 4-3"/></svg>
+      </div>
+      FloodAlpha <span class="dim" style="font-weight:500">Markets</span>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <label class="search"><span class="dim">⌕</span><input id="q" placeholder="Search bank or ticker" list="tickers" autocomplete="off"><datalist id="tickers"></datalist></label>
+    <div class="asof" id="asof"></div>
+  </header>
+
+  <section class="cards" id="cards"></section>
+  <section class="strip" id="strip"></section>
+
+  <section class="grid">
+    <div class="panel chart-panel">
+      <div class="crumb"><span>Markets</span><span class="dim">›</span><span id="crumb-group"></span><span class="dim">›</span><b id="crumb-tk"></b></div>
+      <div class="head">
+        <div>
+          <div class="big num" id="price"></div>
+          <div class="sub" id="sub"></div>
+        </div>
+        <div class="ranges" id="ranges"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="chartbox"><svg id="chart" role="img" aria-label="Price chart"></svg><div class="tip" id="tip"></div></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr id="thead"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="panel discover">
+      <h3 id="disc-title"></h3>
+      <div class="cap" id="disc-cap"></div>
+      <div class="minis" id="minis"></div>
+    </aside>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script id="payload" type="application/json">/*__DATA__*/</script>
+<script>
+(() => {
+  "use strict";
+  const D = JSON.parse(document.getElementById("payload").textContent);
+  const S = D.summary, DATES = D.dates, N = DATES.length;
+  const CARD_TICKERS = ["SPY", "KRE", "KBE", "XLF", "COF"].filter(t => S[t]);
+  const STRIP_TICKERS = ["ALL", "TRV", "PGR", "CB"].filter(t => S[t]);
+  const GROUPS = ["All", "Large banks", "Regional", "ETFs", "Insurers"];
+  const RANGES = ["5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "MAX"];
+  const CMP_COLORS = ["var(--c1)", "var(--c2)", "var(--c3)"];
+  const MAX_CMP = 3;
+
+  let state = { main: S.COF ? "COF" : Object.keys(S)[0], compare: S.KRE ? ["KRE"] : [], range: "1M", group: "All", q: "", sort: { key: "cap", dir: -1 } };
+  const set = patch => { state = { ...state, ...patch }; render(); };
+
+  // ------------------------------------------------------------ format --
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fp = v => v == null ? "—" : v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "");
+  const fchg = v => v == null ? "—" : sg(v) + fp(Math.abs(v));
+  const fpct = v => v == null ? "—" : sg(v) + Math.abs(v).toFixed(2) + "%";
+  const cls = v => v > 0 ? "up" : v < 0 ? "down" : "muted";
+  const arrow = v => v > 0 ? "↑" : v < 0 ? "↓" : "→";
+  const pill = v => `<span class="pill ${cls(v)} num">${arrow(v)} ${fpct(v)}</span>`;
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const d8 = s => { const [y, m, d] = s.split("-").map(Number); return { y, m, d }; };
+  const fdate = s => { const { y, m, d } = d8(s); return `${MONTHS[m - 1]} ${d}, ${y}`; };
+
+  // ------------------------------------------------------------- ranges --
+  function firstIndexOnOrAfter(iso) {
+    let lo = 0, hi = N;
+    while (lo < hi) { const mid = (lo + hi) >> 1; DATES[mid] < iso ? lo = mid + 1 : hi = mid; }
+    return lo;
+  }
+  function shiftDate(iso, months) {
+    const { y, m, d } = d8(iso);
+    const t = new Date(Date.UTC(y, m - 1 + months, d));
+    return t.toISOString().slice(0, 10);
+  }
+  function rangeStart(r) {
+    const last = DATES[N - 1];
+    switch (r) {
+      case "5D": return Math.max(0, N - 5);
+      case "1M": return firstIndexOnOrAfter(shiftDate(last, -1));
+      case "3M": return firstIndexOnOrAfter(shiftDate(last, -3));
+      case "6M": return firstIndexOnOrAfter(shiftDate(last, -6));
+      case "YTD": return firstIndexOnOrAfter(`${d8(last).y}-01-01`);
+      case "1Y": return firstIndexOnOrAfter(shiftDate(last, -12));
+      case "5Y": return firstIndexOnOrAfter(shiftDate(last, -60));
+      default: return 0;
+    }
+  }
+  const firstValid = (arr, i0) => { for (let i = i0; i < arr.length; i++) if (arr[i] != null) return i; return -1; };
+
+  // ------------------------------------------------------------- chart --
+  function niceTicks(lo, hi, count) {
+    const span = hi - lo || Math.abs(hi) || 1;
+    const raw = span / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(x => x * mag).find(x => x >= raw);
+    const out = [];
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10));
+    return out;
+  }
+  function xLabel(iso, r) {
+    const { y, m, d } = d8(iso);
+    if (r === "5Y" || r === "MAX") return String(y);
+    if (r === "1Y" || r === "6M" || r === "YTD") return `${MONTHS[m - 1]} ’${String(y).slice(2)}`;
+    return `${MONTHS[m - 1]} ${d}`;
+  }
+
+  function chartSeries() {
+    const i0 = rangeStart(state.range);
+    const main = D.series[state.main];
+    const m0i = firstValid(main, i0);
+    const lines = [{ t: state.main, color: "var(--up)", vals: main.slice(i0), rebased: false }];
+    state.compare.forEach((t, k) => {
+      const c = D.series[t];
+      const ci = firstValid(c, Math.max(i0, m0i));
+      if (ci < 0 || m0i < 0) return;
+      const f = main[m0i] / c[ci];
+      lines.push({ t, color: CMP_COLORS[k], vals: c.slice(i0).map(v => v == null ? null : v * f), raw: c.slice(i0), base: c[ci], rebased: true });
+    });
+    return { i0, lines, mainBase: m0i >= 0 ? main[m0i] : null };
+  }
+
+  function renderChart() {
+    const svg = document.getElementById("chart");
+    const W = svg.clientWidth || 800, H = svg.clientHeight || 340;
+    const M = { l: 58, r: 14, t: 18, b: 28 };
+    const { i0, lines, mainBase } = chartSeries();
+    const n = N - i0;
+    const all = lines.flatMap(l => l.vals).filter(v => v != null);
+    if (!all.length) { svg.innerHTML = `<text x="20" y="40">No prices in this range.</text>`; return; }
+    let lo = Math.min(...all), hi = Math.max(...all);
+    const pad = (hi - lo) * 0.08 || hi * 0.02;
+    lo -= pad; hi += pad;
+    const X = i => M.l + (n === 1 ? 0 : (i / (n - 1)) * (W - M.l - M.r));
+    const Y = v => M.t + (1 - (v - lo) / (hi - lo)) * (H - M.t - M.b);
+    const path = vals => { let d = "", pen = false; vals.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + "," + Y(v).toFixed(1); pen = true; }); return d; };
+
+    let g = `<defs>
+      <linearGradient id="fillUp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c38e" stop-opacity=".22"/><stop offset="1" stop-color="#22c38e" stop-opacity="0"/></linearGradient>
+      <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="rgba(255,255,255,.03)"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/></pattern>
+    </defs>`;
+    niceTicks(lo, hi, 5).forEach(v => {
+      g += `<line x1="${M.l}" x2="${W - M.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#1f2227"/>`;
+      g += `<text x="${M.l - 10}" y="${Y(v) + 4}" text-anchor="end" class="num">${fp(v)}</text>`;
+    });
+    const nx = Math.min(6, n);
+    for (let k = 0; k < nx; k++) {
+      const i = Math.round(k * (n - 1) / Math.max(1, nx - 1));
+      g += `<text x="${X(i)}" y="${H - 8}" text-anchor="${k === 0 ? "start" : k === nx - 1 ? "end" : "middle"}">${xLabel(DATES[i0 + i], state.range)}</text>`;
+    }
+    // storm events: hatched band = last close before landfall -> first close after the first post-storm Sentinel-1 image
+    (D.events || []).forEach(ev => {
+      const lf = ev.landfall.slice(0, 10);
+      const a = firstIndexOnOrAfter(lf) - 1 - i0;
+      if (ev.event_time) {
+        const b = firstIndexOnOrAfter(ev.event_time.slice(0, 10)) - i0;
+        if (b < 0 || a > n - 1) return;
+        let xa = X(Math.max(0, a)), xb = X(Math.min(n - 1, b));
+        if (xb - xa < 8) { const mid = (xa + xb) / 2; xa = mid - 4; xb = mid + 4; }
+        g += `<rect x="${xa}" y="${M.t}" width="${xb - xa}" height="${H - M.t - M.b}" fill="url(#hatch)"/>`;
+        g += `<line x1="${xb}" x2="${xb}" y1="${M.t}" y2="${H - M.b}" stroke="var(--up)" stroke-dasharray="3 3" opacity=".8"/>`;
+        const lx = Math.min(xb + 6, W - M.r - 150);
+        g += `<rect x="${lx}" y="${M.t + 2}" width="146" height="34" rx="6" fill="#1d2025" stroke="#2d3138"/>`;
+        g += `<text x="${lx + 8}" y="${M.t + 16}" style="fill:var(--ink)">Hurricane ${esc(ev.name)}</text>`;
+        g += `<text x="${lx + 8}" y="${M.t + 30}">landfall → 1st S1 image</text>`;
+      } else {
+        const x = a + 1;
+        if (x < 0 || x > n - 1) return;
+        g += `<line x1="${X(x)}" x2="${X(x)}" y1="${M.t}" y2="${H - M.b}" stroke="#3a3f47" stroke-dasharray="2 4"/>`;
+        g += `<text x="${X(x) + 4}" y="${M.t + 10}" font-size="10">${esc(ev.name)}</text>`;
+      }
+    });
+    const mainPath = path(lines[0].vals);
+    const lastI = lines[0].vals.length - 1;
+    g += `<path d="${mainPath}L${X(lastI)},${H - M.b}L${X(firstValid(lines[0].vals, 0))},${H - M.b}Z" fill="url(#fillUp)"/>`;
+    lines.slice(1).forEach(l => { g += `<path d="${path(l.vals)}" fill="none" stroke="${l.color}" stroke-width="1.8" stroke-linejoin="round"/>`; });
+    g += `<path d="${mainPath}" fill="none" stroke="var(--up)" stroke-width="2" stroke-linejoin="round"/>`;
+    g += `<g id="hover" style="display:none"><line id="hx" y1="${M.t}" y2="${H - M.b}" stroke="#6b7079" stroke-dasharray="3 3"/>${lines.map((l, k) => `<circle id="hd${k}" r="4" fill="${l.color}" stroke="#0c0d0f" stroke-width="2"/>`).join("")}</g>`;
+    g += `<rect id="hit" x="${M.l}" y="${M.t}" width="${W - M.l - M.r}" height="${H - M.t - M.b}" fill="transparent"/>`;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.innerHTML = g;
+
+    const tip = document.getElementById("tip"), hov = svg.querySelector("#hover");
+    const hit = svg.querySelector("#hit");
+    hit.addEventListener("mousemove", e => {
+      const r = svg.getBoundingClientRect();
+      const px = (e.clientX - r.left) * (W / r.width);
+      const i = Math.max(0, Math.min(n - 1, Math.round((px - M.l) / ((W - M.l - M.r) / Math.max(1, n - 1)))));
+      hov.style.display = "";
+      const hx = svg.querySelector("#hx"); hx.setAttribute("x1", X(i)); hx.setAttribute("x2", X(i));
+      let rows = "";
+      lines.forEach((l, k) => {
+        const dot = svg.querySelector("#hd" + k), v = l.vals[i];
+        if (v == null) { dot.style.display = "none"; return; }
+        dot.style.display = ""; dot.setAttribute("cx", X(i)); dot.setAttribute("cy", Y(v));
+        const actual = l.rebased ? l.raw[i] : v, base = l.rebased ? l.base : mainBase;
+        rows += `<div class="r"><span><i style="background:${l.color}"></i>${esc(l.t)}</span><span class="num">${fp(actual)} <span class="${cls(actual - base)}">${fpct((actual / base - 1) * 100)}</span></span></div>`;
+      });
+      tip.innerHTML = `<div class="d">${fdate(DATES[i0 + i])}</div>${rows}`;
+      tip.style.display = "block";
+      const left = (X(i) / W) * r.width;
+      tip.style.left = (left + 14 + tip.offsetWidth > r.width ? left - tip.offsetWidth - 14 : left + 14) + "px";
+      tip.style.top = "24px";
+    });
+    hit.addEventListener("mouseleave", () => { hov.style.display = "none"; tip.style.display = "none"; });
+  }
+
+  // ------------------------------------------------------------ pieces --
+  function renderNav() {
+    document.getElementById("nav").innerHTML = GROUPS.map(g => `<button data-g="${esc(g)}" class="${g === state.group ? "on" : ""}">${esc(g)}</button>`).join("");
+  }
+  function renderCards() {
+    document.getElementById("cards").innerHTML = CARD_TICKERS.map(t => {
+      const s = S[t];
+      return `<button class="card ${t === state.main ? "on" : ""}" data-t="${t}">
+        <div class="t" title="${esc(s.name)}">${esc(s.name)}</div>
+        <div class="p num">${fp(s.last)}</div>
+        <div class="muted num" style="font-size:12px">${fchg(s.chg)} ${fpct(s.chg_pct)}</div>
+        <div class="row"><span class="dim">${t}</span><span class="${cls(s.chg)} num">${arrow(s.chg)} ${fchg(s.chg)} ${fpct(s.chg_pct)}</span></div>
+      </button>`;
+    }).join("");
+  }
+  function renderStrip() {
+    document.getElementById("strip").innerHTML = `<div>P&amp;C insurers</div>` + STRIP_TICKERS.map(t => {
+      const s = S[t];
+      return `<div data-t="${t}"><span class="arrow ${cls(s.chg)}">${arrow(s.chg)}</span>
+        <div style="min-width:0"><div class="nm">${esc(s.name)} <span class="dim">${t}</span></div>
+        <div class="num" style="font-size:12px"><span>${fp(s.last)}</span> <span class="${cls(s.chg)}">${fchg(s.chg)} ${fpct(s.chg_pct)}</span></div></div></div>`;
+    }).join("");
+  }
+  function renderHead() {
+    const s = S[state.main];
+    const { i0, mainBase } = chartSeries();
+    const rr = mainBase ? (s.last / mainBase - 1) * 100 : null;
+    document.getElementById("crumb-group").textContent = s.group;
+    document.getElementById("crumb-tk").textContent = state.main;
+    document.getElementById("price").innerHTML = `${fp(s.last)} <span class="${cls(s.chg)}" style="font-size:15px;font-weight:500">${fchg(s.chg)} (${fpct(s.chg_pct)})</span>`;
+    document.getElementById("sub").innerHTML = `${esc(s.name)} · close ${fdate(s.last_date)} · <span class="${cls(rr)}">${fpct(rr)}</span> over ${state.range === "MAX" ? "full history" : state.range} (since ${fdate(DATES[Math.max(i0, firstValid(D.series[state.main], i0))])})`;
+    document.getElementById("ranges").innerHTML = RANGES.map(r => `<button data-r="${r}" class="${r === state.range ? "on" : ""}">${r}</button>`).join("");
+    const opts = Object.keys(S).filter(t => t !== state.main && !state.compare.includes(t)).sort();
+    document.getElementById("legend").innerHTML =
+      `<span class="chip main"><i style="background:var(--up)"></i>${esc(state.main)}</span>` +
+      state.compare.map((t, k) => `<span class="chip"><i style="background:${CMP_COLORS[k]}"></i>${esc(t)}<button data-rm="${t}" aria-label="Remove ${t}">×</button></span>`).join("") +
+      (state.compare.length < MAX_CMP ? `<select class="add" id="add"><option value="">+ Compare</option>${opts.map(t => `<option value="${t}">${t} · ${esc(S[t].name)}</option>`).join("")}</select>` : "") +
+      `<span class="note">${state.compare.length ? `Comparisons rebased to ${esc(state.main)} at range start · ` : ""}hatched = Isaias landfall → first Sentinel-1 image</span>`;
+  }
+
+  const COLS = [
+    { key: "cmp", label: "" },
+    { key: "name", label: "Name", v: t => S[t].name.toLowerCase() },
+    { key: "last", label: "Last", v: t => S[t].last },
+    { key: "chg", label: "Chg", v: t => S[t].chg },
+    { key: "chg_pct", label: "Chg %", v: t => S[t].chg_pct },
+    { key: "r1y_pct", label: "1Y", v: t => S[t].r1y_pct },
+    { key: "alert", label: "Flood-alert exp.", v: t => S[t].alert_exposure_pct ?? -1 },
+    { key: "cap", label: "", v: t => ({ ETFs: 3, "Large banks": 2, Insurers: 1, Regional: 0 }[S[t].group]) + (S[t].alert_exposure_pct ?? 0) / 1000 },
+  ];
+  function visibleTickers() {
+    const q = state.q.trim().toLowerCase();
+    const col = COLS.find(c => c.key === state.sort.key);
+    return Object.keys(S)
+      .filter(t => state.group === "All" || S[t].group === state.group)
+      .filter(t => !q || t.toLowerCase().includes(q) || S[t].name.toLowerCase().includes(q))
+      .sort((a, b) => { const va = col.v(a) ?? -Infinity, vb = col.v(b) ?? -Infinity; return (va < vb ? -1 : va > vb ? 1 : a < b ? -1 : 1) * state.sort.dir; });
+  }
+  function renderTable() {
+    document.getElementById("thead").innerHTML = COLS.filter(c => c.key !== "cap").map(c =>
+      `<th data-k="${c.key}" class="${state.sort.key === c.key ? "sorted" : ""}">${c.label}${state.sort.key === c.key ? (state.sort.dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("");
+    const maxExp = Math.max(1, ...Object.values(S).map(s => s.alert_exposure_pct || 0));
+    const rows = visibleTickers();
+    document.getElementById("tbody").innerHTML = rows.length ? rows.map(t => {
+      const s = S[t], e = s.alert_exposure_pct;
+      const expCell = e == null ? `<span class="dim">—</span>` : `<span class="exp-bar" style="width:${Math.max(2, 60 * e / maxExp)}px"></span><span class="num">${e < 0.01 ? "<0.01" : e.toFixed(2)}%</span>`;
+      const checked = state.compare.includes(t), disabled = t === state.main || (!checked && state.compare.length >= MAX_CMP);
+      return `<tr data-t="${t}" class="${t === state.main ? "sel" : ""}">
+        <td><input type="checkbox" data-c="${t}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""} aria-label="Compare ${t}"></td>
+        <td>${esc(s.name)}<span class="tk">${t}</span></td>
+        <td class="num">${fp(s.last)}</td>
+        <td class="num ${cls(s.chg)}">${fchg(s.chg)}</td>
+        <td>${pill(s.chg_pct)}</td>
+        <td class="num ${cls(s.r1y_pct)}">${fpct(s.r1y_pct)}</td>
+        <td>${expCell}</td></tr>`;
+    }).join("") : `<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">No tickers match.</td></tr>`;
+  }
+
+  function spark(t, days) {
+    const v = D.series[t].slice(-days).filter(x => x != null);
+    if (v.length < 2) return "";
+    const lo = Math.min(...v), hi = Math.max(...v), w = 140, h = 46;
+    const pts = v.map((x, i) => [(i / (v.length - 1)) * (w - 6) + 1, h - 6 - ((x - lo) / (hi - lo || 1)) * (h - 14)]);
+    const up = v[v.length - 1] >= v[0], col = up ? "#22c38e" : "#f0565a";
+    const [lx, ly] = pts[pts.length - 1];
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts.map(p => p.map(n => n.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".9"/><circle cx="${lx}" cy="${ly}" r="2.6" fill="${col}"/></svg>`;
+  }
+  function renderDiscover() {
+    let picks = Object.keys(S).filter(t => (S[t].alert_exposure_pct || 0) > 0).sort((a, b) => S[b].alert_exposure_pct - S[a].alert_exposure_pct).slice(0, 8);
+    const exposure = picks.length > 0;
+    if (!exposure) picks = Object.keys(S).sort((a, b) => Math.abs(S[b].chg_pct) - Math.abs(S[a].chg_pct)).slice(0, 8);
+    document.getElementById("disc-title").textContent = exposure ? "Under active flood alerts" : "Biggest movers";
+    document.getElementById("disc-cap").textContent = exposure
+      ? `Share of deposits in branches inside NWS flood-alert polygons (live run ${D.alerts_generated || "—"}) · 3-month trend`
+      : "Largest absolute daily moves · 3-month trend (no live alert exposure file found)";
+    document.getElementById("minis").innerHTML = picks.map(t => {
+      const s = S[t];
+      return `<button class="mini" data-t="${t}">
+        <div class="h"><span class="n" title="${esc(s.name)}">${esc(s.name)}</span><span class="tag">${t}</span></div>
+        <div class="p num">${fp(s.last)} <span class="${cls(s.chg_pct)}" style="font-size:11px;font-weight:500">${fpct(s.chg_pct)}</span></div>
+        ${spark(t, 63)}
+        ${exposure ? `<div class="badge num">${s.alert_exposure_pct.toFixed(2)}% deposits under alert</div>` : ""}
+      </button>`;
+    }).join("");
+  }
+
+  function render() {
+    renderNav(); renderCards(); renderStrip(); renderHead(); renderChart(); renderTable(); renderDiscover();
+  }
+
+  // ------------------------------------------------------------ events --
+  const pick = t => { if (S[t]) set({ main: t, compare: state.compare.filter(c => c !== t) }); };
+  document.addEventListener("click", e => {
+    const el = e.target.closest("[data-g],[data-r],[data-rm],[data-k],[data-c],[data-t]");
+    if (!el) return;
+    if (el.dataset.g) set({ group: el.dataset.g });
+    else if (el.dataset.r) set({ range: el.dataset.r });
+    else if (el.dataset.rm) set({ compare: state.compare.filter(t => t !== el.dataset.rm) });
+    else if (el.dataset.k && el.dataset.k !== "cmp") {
+      const k = el.dataset.k;
+      set({ sort: { key: k, dir: state.sort.key === k ? -state.sort.dir : (k === "name" ? 1 : -1) } });
+    } else if (el.dataset.c) {
+      const t = el.dataset.c;
+      set({ compare: state.compare.includes(t) ? state.compare.filter(c => c !== t) : [...state.compare, t].slice(0, MAX_CMP) });
+    } else if (el.dataset.t) pick(el.dataset.t);
+  });
+  document.addEventListener("change", e => {
+    if (e.target.id === "add" && e.target.value) set({ compare: [...state.compare, e.target.value].slice(0, MAX_CMP) });
+  });
+  const q = document.getElementById("q");
+  q.addEventListener("input", () => { state = { ...state, q: q.value }; renderTable(); });
+  q.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    const v = q.value.trim().toUpperCase();
+    const hit = S[v] ? v : visibleTickers()[0];
+    if (hit) { q.value = ""; set({ main: hit, q: "" }); }
+  });
+  document.getElementById("tickers").innerHTML = Object.keys(S).sort().map(t => `<option value="${t}">${esc(S[t].name)}</option>`).join("");
+  document.getElementById("asof").textContent = `Close ${fdate(D.as_of)}`;
+  document.getElementById("foot").innerHTML =
+    `Prices: yfinance daily adjusted closes (no intraday data), cached at <code>data/raw/market/prices.parquet</code>; changes are vs the previous close. ` +
+    `Flood-alert exposure: <code>data/processed/live/bank_alert_exposure.parquet</code>, joined to tickers with <code>config/bank_tickers.csv</code>; — means no branch under an alert in the states checked. ` +
+    `Isaias band runs from the last close before landfall to the first close after the first post-landfall Sentinel-1 image was published (the no-lookahead event time). Not investment advice.`;
+  // srcdoc iframe is same-origin with Streamlit: grow the frame to the content so there's one scrollbar
+  const fit = () => { try { const f = window.frameElement; if (f) f.style.height = document.documentElement.scrollHeight + "px"; } catch (_) { /* cross-origin: keep inner scroll */ } };
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { renderChart(); fit(); }, 120); });
+  render(); fit();
+  document.fonts?.ready.then(fit);
+})();
+</script>
+</body>
+</html>
