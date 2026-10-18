@@ -213,6 +213,27 @@ def test_pages_are_served_and_linked(client):
     assert "localhost" not in landing
 
 
+BRAND_PAGES = ("markets.html", "index.html", "dashboard.html")
+
+
+def test_pages_use_the_quantcomm_logo_and_favicon():
+    for name in BRAND_PAGES:
+        html = (ROOT / "web" / name).read_text()
+        assert 'rel="icon"' in html and 'rel="apple-touch-icon"' in html, name
+        assert "/assets/brand/mark.png" in html, name
+
+
+def test_favicon_is_served(client):
+    r = client.get("/favicon.ico")
+    assert r.status_code == 200 and r.content[:4] == b"\x00\x00\x01\x00"  # ICO header
+
+
+def test_brand_images_are_served(client):
+    for name in ("mark.png", "favicon-32.png", "apple-touch-icon.png", "quantcomm-logo.png"):
+        r = client.get(f"/assets/brand/{name}")
+        assert r.status_code == 200 and r.headers["content-type"] == "image/png", name
+
+
 def test_markets_api_reports_missing_price_cache(empty_dir, client, monkeypatch, tmp_path):
     monkeypatch.setattr(stocks, "PRICES", tmp_path / "no_prices.parquet")
     r = client.get("/api/markets")

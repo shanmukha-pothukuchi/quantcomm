@@ -72,6 +72,10 @@ def create_app() -> FastAPI:
                             f"<p><a style='color:#3fd6c6' href='/'>Back to Quantcomm</a></p>", status_code=exc.status_code)
 
     # ------------------------------------------------------------ pages --
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return FileResponse(WEB / "assets" / "brand" / "favicon.ico", media_type="image/x-icon")
+
     @app.get("/", include_in_schema=False)
     def markets_app():
         return _page("markets.html")

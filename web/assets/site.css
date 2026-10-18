@@ -72,12 +72,7 @@ svg { display: block; }
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
-.brand-mark {
-  width: 24px; height: 24px; border-radius: 50%;
-  border: 1.5px solid var(--amber); display: grid; place-items: center;
-  box-shadow: 0 0 14px rgba(255, 138, 76, 0.45);
-}
-.brand-mark span { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffd2b8, var(--amber)); }
+.brand-mark { width: 28px; height: 28px; display: block; filter: drop-shadow(0 0 10px rgba(255, 138, 76, 0.35)); }
 .nav-links {
   display: flex; gap: 4px; padding: 5px;
   border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, 0.03);
