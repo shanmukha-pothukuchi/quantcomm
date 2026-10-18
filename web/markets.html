@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloodAlpha · Markets</title>
+<meta name="description" content="Bank and company stock charts, with an AI agent's read on what to buy, hold or avoid. Capital One first.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0d0f; --panel: #131417; --panel-2: #1a1c21; --line: #23262c; --line-2: #2d3138;
+  --ink: #ecedef; --ink-2: #9a9da5; --ink-3: #686b73;
+  --up: #22c38e; --up-bg: rgba(34,195,142,.13); --down: #f0565a; --down-bg: rgba(240,86,90,.13);
+  --amber: #e9b949; --amber-bg: rgba(233,185,73,.13); --blue: #4ba3ff; --focus: #e9b949;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 Inter, system-ui, -apple-system, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 16px 16px 40px; }
+.muted { color: var(--ink-2); } .dim { color: var(--ink-3); }
+.up { color: var(--up); } .down { color: var(--down); }
+.num { font-variant-numeric: tabular-nums; }
+
+header.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 0 14px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--up); display: grid; place-items: center; color: #03140d; font-weight: 800; }
+.tag { color: var(--ink-2); font-size: 13px; }
+.top .spacer { flex: 1; }
+.asof { color: var(--ink-2); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.btn { background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.btn:hover:not(:disabled) { border-color: var(--ink-3); }
+.btn:disabled { opacity: .55; cursor: progress; }
+.btn.primary { background: var(--up); color: #03140d; border-color: var(--up); }
+
+.banner { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); display: flex; gap: 14px; align-items: flex-start; }
+.banner .txt { flex: 1; min-width: 0; }
+.banner h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+.banner .sub { color: var(--ink-2); font-size: 12px; margin-top: 4px; }
+.banner.warn { border-color: rgba(233,185,73,.4); background: var(--amber-bg); }
+.banner.err { border-color: rgba(240,86,90,.4); background: var(--down-bg); }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+.chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; cursor: pointer; font-size: 13px; color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+.chip:hover { color: var(--ink); border-color: var(--line-2); }
+.chip.on { color: var(--ink); border-color: var(--ink-3); background: var(--panel-2); }
+.chip.focus { border-color: rgba(233,185,73,.55); }
+.chip .d { font-size: 11px; }
+.search { margin-left: auto; display: flex; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; min-width: 250px; }
+.search input { background: none; border: 0; outline: 0; width: 100%; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); grid-template-areas: "chart agent" "picks agent"; gap: 12px; margin-top: 12px; align-items: start; }
+#chart-card { grid-area: chart; } #agent-card { grid-area: agent; } #picks-card { grid-area: picks; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); font-weight: 600; }
+.co-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.co-name { font-size: 18px; font-weight: 600; }
+.co-name small { color: var(--ink-2); font-weight: 500; margin-left: 6px; font-size: 13px; }
+.price { font-size: 28px; font-weight: 650; letter-spacing: -.01em; }
+.price small { font-size: 14px; font-weight: 600; margin-left: 8px; }
+.ranges { display: flex; gap: 4px; }
+.ranges button { background: none; border: 1px solid transparent; border-radius: 8px; padding: 4px 9px; color: var(--ink-2); cursor: pointer; font-size: 12px; font-weight: 600; }
+.ranges button.on { color: var(--ink); border-color: var(--line-2); background: var(--panel-2); }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin: 6px 0 0; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+.chartbox { position: relative; margin-top: 6px; }
+.chartbox svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.tip { position: absolute; pointer-events: none; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 9px; font-size: 12px; display: none; white-space: nowrap; }
+.nodata { color: var(--ink-2); padding: 60px 0; text-align: center; }
+
+.verdict { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-weight: 700; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; }
+.verdict.buy, .verdict.positive { background: var(--up-bg); color: var(--up); }
+.verdict.avoid, .verdict.negative { background: var(--down-bg); color: var(--down); }
+.verdict.hold, .verdict.watch, .verdict.neutral { background: var(--amber-bg); color: var(--amber); }
+.conf { color: var(--ink-2); font-size: 12px; }
+.bar { height: 4px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.bar i { display: block; height: 100%; background: var(--ink-2); }
+.agent p { margin: 10px 0 0; }
+.agent .lead { font-size: 15px; font-weight: 600; margin-top: 10px; }
+.agent .change { color: var(--ink-2); font-size: 13px; margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.evid { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.evid .src { color: var(--ink-3); font-size: 12px; margin-bottom: 8px; }
+.evid dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; font-size: 13px; }
+.evid dt { color: var(--ink-2); }
+.evid dd { margin: 0; text-align: right; font-weight: 600; }
+.caveat { color: var(--ink-3); font-size: 12px; margin-top: 10px; }
+
+.picks { margin-top: 12px; }
+.pick { display: grid; grid-template-columns: 110px 90px 1fr; gap: 12px; align-items: center; padding: 11px 4px; border-top: 1px solid var(--line); cursor: pointer; }
+.pick:first-of-type { border-top: 0; }
+.pick:hover .pn { text-decoration: underline; }
+.pick .pn { font-weight: 600; }
+.pick .pn small { display: block; color: var(--ink-3); font-weight: 500; font-size: 12px; }
+.pick .reason { color: var(--ink-2); font-size: 13px; }
+.focus-note { margin-top: 10px; color: var(--ink-2); font-size: 12px; }
+.more { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
+.more summary { cursor: pointer; color: var(--ink-2); font-size: 13px; padding: 4px 4px 8px; }
+.empty { color: var(--ink-2); font-size: 13px; }
+footer { margin-top: 22px; color: var(--ink-3); font-size: 12px; display: flex; gap: 14px; flex-wrap: wrap; }
+footer a { color: var(--ink-2); }
+
+@media (max-width: 880px) {
+  .main { grid-template-columns: 1fr; grid-template-areas: "chart" "agent" "picks"; }
+  .search { margin-left: 0; width: 100%; }
+  .pick { grid-template-columns: 1fr auto; }
+  .pick .reason { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .wrap { padding: 12px 16px 32px; }
+  .price { font-size: 24px; }
+  .card { padding: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand"><span class="logo">F</span>FloodAlpha</div>
+  <span class="tag">Bank stocks, read by AI agents</span>
+  <span class="spacer"></span>
+  <span class="asof" id="asof">loading…</span>
+  <button class="btn primary" id="run" type="button">Run analysis</button>
+</header>
+
+<section id="banner" class="banner" hidden></section>
+
+<nav class="chips" id="chips" aria-label="Companies"></nav>
+
+<main id="app" class="main">
+  <section class="card" id="chart-card">
+    <div class="co-head">
+      <div>
+        <div class="co-name" id="co-name"></div>
+        <div class="price num" id="price"></div>
+      </div>
+      <div class="ranges" id="ranges" role="group" aria-label="Chart range"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chartbox" id="chartbox">
+      <svg id="chart" role="img" aria-label="Price chart since the chosen start date"></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+  </section>
+
+  <section class="card agent" id="agent-card" aria-live="polite"></section>
+  <section class="card picks" id="picks-card" hidden>
+    <h3>Agent picks</h3>
+    <div id="picks"></div>
+  </section>
+</main>
+
+<footer>
+  <span>Research prototype for a hackathon. Not financial advice.</span>
+  <a href="/dashboard">Research dashboard</a>
+  <a href="/about">About FloodAlpha</a>
+</footer>
+</div>
+<datalist id="all-tickers"></datalist>
+
+<script>
+const RANGES = { "1M": 21, "6M": 126, "1Y": 252, "5Y": 1260, "All": Infinity };
+const S = { list: null, advice: null, sel: null, detail: null, range: "1Y", busy: false };
+const $ = (id) => document.getElementById(id);
+
+function esc(v) {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+function fmtPct(v, signed = true) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return (signed && v > 0 ? "+" : "") + v.toFixed(2) + "%";
+}
+function fmtPrice(v) { return v == null ? "—" : "$" + v.toFixed(2); }
+function fmtValue(m) {
+  const v = m.value;
+  if (v == null || v === "") return "—";
+  if (typeof v === "number") {
+    if (m.unit === "%") return fmtPct(v, false);
+    if (m.unit === "$") return "$" + Math.round(v).toLocaleString("en-US");
+    if (m.unit === "σ") return v.toFixed(2) + " σ";
+    return Number.isInteger(v) ? v.toLocaleString("en-US") : v.toFixed(2);
+  }
+  return String(v);
+}
+function fmtDate(iso) {
+  const d = new Date(iso + "T00:00:00Z");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+function fmtStamp(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const body = await r.json().catch(() => null);
+  if (!r.ok || !body || !body.success) throw new Error((body && body.error) || `Request failed (HTTP ${r.status})`);
+  return body.data;
+}
+function banner(kind, html) {
+  const el = $("banner");
+  if (!html) { el.hidden = true; el.innerHTML = ""; return; }
+  el.hidden = false;
+  el.className = "banner " + (kind || "");
+  el.innerHTML = html;
+}
+
+// ------------------------------------------------------------ agent analysis --
+function analysisFor(t) {
+  const a = S.advice && S.advice.advice;
+  const r = a && a.analysts ? a.analysts[t] : null;
+  return r && r.status === "ok" ? r.analysis : null;
+}
+function renderAdvice() {
+  const a = S.advice && S.advice.advice;
+  const ok = a && a.status === "ok" && a.portfolio;
+  $("asof").textContent = S.list ? "Prices as of " + fmtDate(S.list.as_of) : "";
+  if (!S.advice || !S.advice.available) {
+    banner("", `<div class="txt"><h2>The agents haven't analysed the market yet</h2>
+      <div class="sub">${esc(S.advice ? S.advice.hint : "")}</div></div>`);
+  } else if (a && a.status !== "ok") {
+    banner("err", `<div class="txt"><h2>Last agent run failed</h2><div class="sub">${esc(a.error || "unknown error")} · ${esc(fmtStamp(a.generated_utc))}</div></div>`);
+  } else if (S.advice.stale) {
+    banner("warn", `<div class="txt"><h2>${esc(a.portfolio.headline)}</h2><div class="sub">Market data or the agent prompts changed after this analysis ran (${esc(fmtStamp(a.generated_utc))}). Run analysis for a fresh read.</div></div>`);
+  } else {
+    banner("", `<div class="txt"><h2>${esc(a.portfolio.headline)}</h2><div class="sub">${esc(a.universe.length)} companies analysed by ${esc(a.model)} · ${esc(fmtStamp(a.generated_utc))}</div></div>`);
+  }
+  renderPicks(ok ? a.portfolio : null);
+}
+function renderPicks(pf) {
+  const card = $("picks-card");
+  if (!pf || !pf.picks.length) { card.hidden = true; return; }
+  card.hidden = false;
+  const name = (t) => (S.list.tickers.find((r) => r.ticker === t) || {}).name || "";
+  const row = (p) => `
+    <div class="pick" role="button" tabindex="0" data-t="${esc(p.ticker)}">
+      <div class="pn">${esc(p.ticker)}<small>${esc(name(p.ticker))}</small></div>
+      <div><span class="verdict ${esc(p.action)}">${esc(p.action)}</span><div class="conf">${p.confidence}% confident</div></div>
+      <div class="reason">${esc(p.reason)}</div>
+    </div>`;
+  const active = pf.picks.filter((p) => p.action !== "hold");
+  const holds = pf.picks.filter((p) => p.action === "hold");
+  $("picks").innerHTML = active.map(row).join("") +
+    (holds.length ? `<details class="more"><summary>${holds.length} hold: ${holds.map((p) => esc(p.ticker)).join(", ")}</summary>${holds.map(row).join("")}</details>` : "");
+}
+function renderCompany() {
+  const d = S.detail, card = $("agent-card");
+  const pf = S.advice && S.advice.advice && S.advice.advice.portfolio;
+  const isFocus = d.focus;
+  let agent;
+  if (isFocus && pf) {
+    const f = pf.focus;
+    agent = `<h3>Agent's read on ${esc(d.ticker)}</h3>
+      <span class="verdict ${esc(f.action)}">${esc(f.action)}</span> <span class="conf">${f.confidence}% confident</span>
+      <div class="bar"><i style="width:${f.confidence}%"></i></div>
+      <p>${esc(f.explanation)}</p>
+      <div class="change"><b>What would change the call:</b> ${esc(f.what_would_change_my_mind)}</div>`;
+  } else if (analysisFor(d.ticker)) {
+    const an = analysisFor(d.ticker);
+    agent = `<h3>Agent's read on ${esc(d.ticker)}</h3>
+      <span class="verdict ${esc(an.view)}">${esc(an.view)}</span> <span class="conf">${an.confidence}% confident · expects ${esc(an.expected_move)}</span>
+      <div class="bar"><i style="width:${an.confidence}%"></i></div>
+      <p class="lead">${esc(an.headline)}</p>
+      <p>${esc(an.reasoning)}</p>`;
+  } else {
+    const failed = S.advice && S.advice.advice && S.advice.advice.analysts && S.advice.advice.analysts[d.ticker];
+    agent = `<h3>Agent's read on ${esc(d.ticker)}</h3>
+      <p class="empty">${failed ? "The analyst for this company failed on the last run: " + esc(failed.error) :
+        (S.advice && S.advice.available ? "This company is not in the agents' covered list." : "Run analysis to get the agent's view on this company.")}</p>`;
+  }
+  card.innerHTML = agent + evidenceBlock(d);
+}
+function evidenceBlock(d) {
+  const sig = d.signal;
+  if (!sig) return `<div class="evid"><div class="src">No company-specific data for this stock; it is compared with its benchmark.</div></div>`;
+  const rows = sig.metrics.filter((m) => m.label).slice(0, 4)
+    .map((m) => `<dt>${esc(m.label)}</dt><dd>${esc(fmtValue(m))}</dd>`).join("");
+  const storms = pastStormLine(d);
+  return `<div class="evid">
+    <div class="src">${esc(sig.title)} · ${esc(sig.source)}</div>
+    <dl>${rows}</dl>
+    ${storms ? `<div class="caveat">${esc(storms)}</div>` : ""}
+    ${sig.caveats && sig.caveats.length ? `<div class="caveat">${esc(sig.caveats[0])}</div>` : ""}
+  </div>`;
+}
+function pastStormLine(d) {
+  const rows = d.signal && d.signal.storm_history;
+  if (!rows || !rows.length) return "";
+  const mean = rows.reduce((s, r) => s + r.excess_pct, 0) / rows.length;
+  const under = rows.filter((r) => r.excess_pct < 0).length;
+  return `Past landfalls: ${fmtPct(mean)} vs ${d.benchmark.ticker} over 5 trading days on average; it lagged the benchmark after ${under} of ${rows.length}.`;
+}
+
+// ------------------------------------------------------------------ chart --
+function chips() {
+  const focus = S.list.focus;
+  const byT = Object.fromEntries(S.list.tickers.map((r) => [r.ticker, r]));
+  $("chips").innerHTML = S.list.universe.map((t) => {
+    const r = byT[t] || {};
+    return `<button type="button" class="chip ${t === focus ? "focus" : ""} ${t === S.sel ? "on" : ""}" data-t="${esc(t)}">
+      ${esc(t)}${t === focus ? ' <span class="dim">· focus</span>' : ""}
+      <span class="d ${r.chg_pct >= 0 ? "up" : "down"} num">${fmtPct(r.chg_pct)}</span></button>`;
+  }).join("") +
+  `<label class="search"><input id="q" list="all-tickers" placeholder="Other ticker or company" autocomplete="off" aria-label="Find a company"></label>`;
+  $("all-tickers").innerHTML = S.list.tickers.map((r) => `<option value="${esc(r.ticker)}">${esc(r.name)}</option>`).join("");
+  $("ranges").innerHTML = Object.keys(RANGES).map((k) => `<button type="button" class="${k === S.range ? "on" : ""}" data-r="${k}">${k}</button>`).join("");
+}
+function slice(detail) {
+  const n = RANGES[S.range];
+  const start = Number.isFinite(n) ? Math.max(0, detail.dates.length - n) : 0;
+  return { dates: detail.dates.slice(start), closes: detail.closes.slice(start),
+           bench: detail.benchmark.closes ? detail.benchmark.closes.slice(start) : null };
+}
+function niceTicks(lo, hi) {
+  const raw = (hi - lo) / 4 || 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw);
+  const out = [];
+  for (let v = Math.floor(lo / step) * step; out.length === 0 || out[out.length - 1] < hi - 1e-9; v += step) out.push(+v.toFixed(10));
+  return { ticks: out, step };
+}
+function pctSeries(vals) {
+  const base = vals.find((v) => v != null);
+  return vals.map((v) => (v == null || base == null ? null : (v / base - 1) * 100));
+}
+function renderChart() {
+  const d = S.detail, box = $("chartbox"), svg = $("chart");
+  const sl = slice(d), W = Math.max(280, box.clientWidth), H = 300, M = { l: 46, r: 14, t: 14, b: 28 };
+  const co = pctSeries(sl.closes), bm = sl.bench ? pctSeries(sl.bench) : null;
+  const all = [...co, ...(bm || [])].filter((v) => v != null);
+  const last = [...sl.closes].reverse().find((v) => v != null);
+  $("co-name").innerHTML = `${esc(d.name)} <small>${esc(d.ticker)}</small>`;
+  const lastPct = co.filter((v) => v != null).pop();
+  $("price").innerHTML = `${fmtPrice(last)} <small class="${lastPct >= 0 ? "up" : "down"}">${fmtPct(lastPct)} in ${esc(S.range)}</small>`;
+  $("legend").innerHTML = `<span><i style="background:${d.focus ? "var(--focus)" : "var(--up)"}"></i>${esc(d.ticker)}</span>` +
+    (bm ? `<span><i style="border-top:1px dashed var(--ink-3);height:0"></i>${esc(d.benchmark.ticker)} benchmark</span>` : "") +
+    `<span><i style="background:var(--ink-3)"></i>storm landfall</span>`;
+  if (!all.length) { svg.innerHTML = ""; return; }
+  const { ticks, step } = niceTicks(Math.min(0, ...all), Math.max(0, ...all));
+  const y0 = ticks[0], y1 = ticks[ticks.length - 1] + (ticks.length < 2 ? step : 0);
+  const n = sl.dates.length;
+  const x = (i) => M.l + (n > 1 ? i / (n - 1) : 0) * (W - M.l - M.r);
+  const y = (v) => M.t + (1 - (v - y0) / (y1 - y0)) * (H - M.t - M.b);
+  const path = (vals) => {
+    let out = "", pen = false;
+    vals.forEach((v, i) => { if (v == null) { pen = false; return; } out += (pen ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1); pen = true; });
+    return out;
+  };
+  const grid = ticks.map((v) => {
+    const lbl = (step >= 1 ? v.toFixed(0) : v.toFixed(1)) + "%";
+    return `<line x1="${M.l}" x2="${W - M.r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#23262c"/>
+      <text x="${M.l - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#686b73">${lbl}</text>`;
+  }).join("");
+  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => {
+    const i = Math.round(f * (n - 1));
+    const lbl = new Date(sl.dates[i] + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
+    return `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${f === 0 ? "start" : f === 1 ? "end" : "middle"}" font-size="11" fill="#686b73">${esc(lbl)}</text>`;
+  }).join("");
+  const first = sl.dates[0], lastDate = sl.dates[n - 1];
+  const events = (d.events || []).filter((e) => e.landfall.slice(0, 10) >= first && e.landfall.slice(0, 10) <= lastDate).map((e) => {
+    const i = sl.dates.findIndex((dt) => dt >= e.landfall.slice(0, 10));
+    if (i < 0) return "";
+    const right = x(i) > W - 70;  // keep labels inside the plot on the right edge
+    return `<line x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${M.t}" y2="${H - M.b}" stroke="#686b73" stroke-dasharray="2 4"/>
+      <text x="${(x(i) + (right ? -4 : 4)).toFixed(1)}" y="${M.t + 11}" text-anchor="${right ? "end" : "start"}" font-size="10" fill="#9a9da5">${esc(e.name)}</text>`;
+  }).join("");
+  const zero = y0 < 0 && y1 > 0 ? `<line x1="${M.l}" x2="${W - M.r}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#2d3138"/>` : "";
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("height", H);
+  svg.innerHTML = `${grid}${zero}${events}
+    ${bm ? `<path d="${path(bm)}" fill="none" stroke="#686b73" stroke-width="1.5" stroke-dasharray="4 4"/>` : ""}
+    <path d="${path(co)}" fill="none" stroke="${d.focus ? "#e9b949" : "#22c38e"}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${xTicks}
+    <g id="hover" style="display:none"><line id="hx" y1="${M.t}" y2="${H - M.b}" stroke="#6b7079" stroke-dasharray="3 3"/><circle id="hd" r="4" stroke="#0c0d0f" stroke-width="2"/></g>
+    <rect id="hit" x="${M.l}" y="${M.t}" width="${W - M.l - M.r}" height="${H - M.t - M.b}" fill="transparent"/>`;
+  const tip = $("tip");
+  svg.onmousemove = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((ev.clientX - r.left) / r.width) * W;
+    const i = Math.max(0, Math.min(n - 1, Math.round(((px - M.l) / (W - M.l - M.r)) * (n - 1))));
+    if (co[i] == null) { tip.style.display = "none"; $("hover").style.display = "none"; return; }
+    $("hover").style.display = "";
+    $("hx").setAttribute("x1", x(i)); $("hx").setAttribute("x2", x(i));
+    $("hd").setAttribute("cx", x(i)); $("hd").setAttribute("cy", y(co[i]));
+    $("hd").setAttribute("fill", d.focus ? "#e9b949" : "#22c38e");
+    const bmTxt = bm && bm[i] != null ? ` · ${esc(d.benchmark.ticker)} ${fmtPct(bm[i])}` : "";
+    tip.innerHTML = `<b>${esc(fmtDate(sl.dates[i]))}</b><br>${fmtPrice(sl.closes[i])} (${fmtPct(co[i])})${bmTxt}`;
+    tip.style.display = "block";
+    tip.style.left = Math.min(W - 180, Math.max(0, (x(i) / W) * r.width - 60)) + "px";
+    tip.style.top = "0px";
+  };
+  svg.onmouseleave = () => { tip.style.display = "none"; $("hover").style.display = "none"; };
+}
+
+// -------------------------------------------------------------- actions --
+async function select(t) {
+  if (!t) return;
+  try {
+    S.detail = await api(`/api/markets/${encodeURIComponent(t)}`);
+    S.sel = t;
+    chips();
+    renderChart();
+    renderCompany();
+  } catch (e) {
+    banner("err", `<div class="txt"><h2>Could not load ${esc(t)}</h2><div class="sub">${esc(e.message)}</div></div>`);
+  }
+}
+async function runAnalysis() {
+  if (S.busy) return;
+  S.busy = true;
+  $("run").disabled = true;
+  $("run").textContent = "Agents running…";
+  banner("", `<div class="txt"><h2>Agents are reading the data</h2><div class="sub">One analyst per company, then a portfolio manager. This takes a few minutes.</div></div>`);
+  try {
+    const adv = await api("/api/advice/run", { method: "POST" });
+    S.advice = { available: true, stale: false, advice: adv, hint: null };
+  } catch (e) {
+    S.advice = S.advice && S.advice.advice ? { ...S.advice, advice: { ...S.advice.advice, status: "error", error: e.message } } : { available: false, hint: e.message };
+  } finally {
+    S.busy = false;
+    $("run").disabled = false;
+    $("run").textContent = "Run analysis";
+  }
+  renderAdvice();
+  renderCompany();
+}
+
+document.addEventListener("click", (ev) => {
+  const chip = ev.target.closest("[data-t]");
+  if (chip && chip.classList.contains("chip")) select(chip.dataset.t);
+  if (chip && chip.classList.contains("pick")) select(chip.dataset.t);
+  const r = ev.target.closest("[data-r]");
+  if (r) { S.range = r.dataset.r; chips(); renderChart(); }
+});
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter" && ev.target.classList && ev.target.classList.contains("pick")) select(ev.target.dataset.t);
+  if (ev.key === "Enter" && ev.target.id === "q") {
+    const v = ev.target.value.trim().toUpperCase();
+    const hit = S.list.tickers.find((r) => r.ticker === v) || S.list.tickers.find((r) => r.name.toUpperCase().startsWith(v));
+    if (hit) { ev.target.value = ""; select(hit.ticker); }
+  }
+});
+$("run").addEventListener("click", runAnalysis);
+let resizeTimer = null;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => S.detail && renderChart(), 120); });
+
+async function boot() {
+  try {
+    S.list = await api("/api/markets");
+  } catch (e) {
+    $("asof").textContent = "";
+    banner("err", `<div class="txt"><h2>Market data is not available</h2><div class="sub">${esc(e.message)}</div></div>`);
+    return;
+  }
+  S.advice = await api("/api/advice").catch((e) => ({ available: false, stale: null, advice: null, hint: e.message }));
+  S.sel = S.list.focus;
+  renderAdvice();
+  await select(S.sel);
+}
+boot();
+</script>
+</body>
+</html>

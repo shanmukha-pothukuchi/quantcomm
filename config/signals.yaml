@@ -1,0 +1,52 @@
+# Which alternative-data signal drives each ticker on the Stocks page. Justifications in ASSUMPTIONS.md.
+#   branch_network   Capital One: Nessie branches/ATMs + SYNTHETIC Nessie portfolio under live NWS flood alerts
+#   flood_deposits   every other bank (default): share of FDIC SOD deposits in branches under live NWS flood alerts
+#   parking_lot_sar  retailers: Sentinel-1 radar backscatter over OSM parking lots at the company's stores
+#   weather_alerts   P&C insurers: active NWS flood alerts + NHC storms, and the Isaias event-window return
+#   benchmark        ETFs: no company-specific signal
+defaults:
+  bank: flood_deposits
+  etf: benchmark
+  insurer: weather_alerts
+
+tickers:
+  COF: {signal: branch_network}
+
+retail:
+  WMT:
+    name: Walmart Inc.
+    signal: parking_lot_sar
+    brand_wikidata: Q483551          # OSM brand:wikidata tag for Walmart
+    shop_regex: "supermarket|department_store"
+    # metro bboxes (south, west, north, east) - spread across climates so weather doesn't line up across stores
+    metros:
+      dallas:  [32.60, -97.00, 33.10, -96.50]
+      atlanta: [33.55, -84.65, 34.05, -84.15]
+      phoenix: [33.25, -112.30, 33.75, -111.70]
+      chicago: [41.65, -88.05, 42.10, -87.55]
+      houston: [29.55, -95.75, 30.05, -95.15]
+      denver:  [39.55, -105.15, 39.95, -104.75]
+
+parking_sar:
+  collection: sentinel-1-rtc
+  polarization: vv
+  start: "2022-01-01"                # >= 1 year before the first YoY reading
+  lot_search_radius_deg: 0.001       # ~100 m: OSM parking polygons this close to the store footprint belong to it
+  min_lot_area_m2: 8000              # ~80 pixels at 10 m; smaller lots are pure speckle
+  min_lot_px: 20                     # per-scene minimum valid pixels inside the lot
+  pass_direction: ascending          # ~18:00-19:00 local over CONUS (shoppers present); descending ~06:00 (lots empty)
+  holiday_window: ["11-15", "12-31"] # validation: holiday-shopping season vs the rest of the year
+  yoy_window_days: 91                # signal = mean activity over the trailing quarter minus the same quarter a year earlier
+  forward_days: 63                   # backtest horizon (trading days) for excess return vs `benchmark`
+  benchmark: SPY
+  publication_lag_days: 3            # trade on the first close >= acquisition + 3 days (MPC RTC items land within ~1-2 days)
+  significance: 0.10                 # overlap-adjusted p below this before the page says anything but "no edge"
+  min_scenes_per_window: 4
+
+# Agent analysis on the Markets page (src/floodalpha/agent). One analyst per covered company reads that company's
+# evidence bundle (price trend, its own data-source signal, past storms); then one portfolio manager ranks them.
+# The focus company is the reason for the research and is always shown first.
+agent:
+  focus: COF
+  universe: [COF, WMT, JPM, BAC, WFC, C, USB, PNC, TFC, ALL, TRV, PGR, CB, KRE]
+  max_workers: 4            # parallel analyst calls to the LLM endpoint

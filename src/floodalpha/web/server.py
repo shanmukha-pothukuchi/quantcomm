@@ -1,15 +1,16 @@
 """FloodAlpha web app: landing page, dashboard and stocks page over one small JSON API.
 
 Pages
-  /            landing page (web/index.html)
-  /dashboard   storm case study, live, bank exposure, market test, validation, methodology
-  /stocks      bank / ETF / insurer / retail prices with each company's flood signal
+  /, /stocks   Markets app: price charts, the agents' analysis, Capital One first (web/markets.html)
+  /about       project landing page (web/index.html)
+  /dashboard   research dashboard: storm case study, live, bank exposure, market test, validation
 
 API (all responses: {"success": bool, "data": ..., "error": str | null})
-  /api/storms                     storm list with flood-map status
-  /api/storms/{key}               case-study payload for one storm
-  /api/storms/{key}/layers/{name} GeoJSON: polygons | coverage | track
-  /api/live, /api/live/alerts     live summary and alert polygons
+  /api/markets, /api/markets/{ticker}   stock list; one company's chart, signal and past storms
+  /api/advice                           cached agent analysis + whether it is stale
+  /api/advice/run                       POST: run the agents now (needs LLM_* in .env)
+  /api/storms, /api/storms/{key}, /api/storms/{key}/layers/{name}
+  /api/live, /api/live/alerts
   /api/banks, /api/market, /api/validation, /api/methodology
 """
 from __future__ import annotations
@@ -22,12 +23,12 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from floodalpha.agent.llm import LLMError
 from floodalpha.config import ROOT
-from floodalpha.web import live, research, stocks, storms
+from floodalpha.web import live, markets, research, stocks, storms
 
 log = logging.getLogger("floodalpha.web")
 WEB = ROOT / "web"
-STOCKS_TEMPLATE = WEB / "stocks.html"
 
 
 def ok(data: Any) -> dict:
@@ -42,6 +43,8 @@ def _guard(fn: Callable[[], Any], what: str) -> Any:
     """Run a payload builder; unknown keys -> 404, anything else -> logged 500 with a readable message."""
     try:
         return ok(fn())
+    except stocks.PricesMissing as exc:
+        raise HTTPException(503, str(exc)) from exc
     except KeyError as exc:
         raise HTTPException(404, f"Unknown {what}: {exc.args[0] if exc.args else ''}") from exc
     except Exception as exc:  # noqa: BLE001 — log the real cause, show the user which output is broken
@@ -70,24 +73,20 @@ def create_app() -> FastAPI:
 
     # ------------------------------------------------------------ pages --
     @app.get("/", include_in_schema=False)
+    def markets_app():
+        return _page("markets.html")
+
+    @app.get("/stocks", include_in_schema=False)
+    def stocks_alias():
+        return _page("markets.html")
+
+    @app.get("/about", include_in_schema=False)
     def landing():
         return _page("index.html")
 
     @app.get("/dashboard", include_in_schema=False)
     def dashboard():
         return _page("dashboard.html")
-
-    @app.get("/stocks", include_in_schema=False, response_class=HTMLResponse)
-    def stocks_page():
-        if not STOCKS_TEMPLATE.exists():
-            raise HTTPException(404, "Stocks template web/stocks.html is missing.")
-        try:
-            return HTMLResponse(stocks.render(STOCKS_TEMPLATE.read_text()))
-        except stocks.PricesMissing as exc:
-            raise HTTPException(503, str(exc)) from exc
-        except Exception as exc:  # noqa: BLE001
-            log.exception("stocks payload failed")
-            raise HTTPException(500, f"Could not build the stocks view from cached outputs ({type(exc).__name__}).") from exc
 
     @app.get("/media/{storm}/{name}", include_in_schema=False)
     def media(storm: str, name: str):
@@ -99,6 +98,32 @@ def create_app() -> FastAPI:
         return FileResponse(path, media_type="image/png")
 
     # -------------------------------------------------------------- api --
+    @app.get("/api/markets")
+    def api_markets():
+        return _guard(lambda: markets.list_view(stocks.payload()), "market list")
+
+    @app.get("/api/markets/{ticker}")
+    def api_market_ticker(ticker: str):
+        return _guard(lambda: markets.ticker_view(stocks.payload(), ticker), "ticker")
+
+    @app.get("/api/advice")
+    def api_advice():
+        return _guard(lambda: markets.advice_view(stocks.payload()), "agent analysis")
+
+    @app.post("/api/advice/run")
+    def api_advice_run():
+        try:
+            return ok(markets.run_analysis(stocks.payload()))
+        except markets.AnalysisBusy as exc:
+            raise HTTPException(409, str(exc)) from exc
+        except LLMError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        except stocks.PricesMissing as exc:
+            raise HTTPException(503, str(exc)) from exc
+        except Exception as exc:  # the page shows a readable message; the cause goes to the log
+            log.exception("agent run failed")
+            raise HTTPException(500, f"Agent run failed unexpectedly ({type(exc).__name__}); see the server log.") from exc
+
     @app.get("/api/storms")
     def api_storms():
         return _guard(storms.storm_index, "storm list")

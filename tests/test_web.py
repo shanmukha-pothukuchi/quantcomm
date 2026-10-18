@@ -213,19 +213,16 @@ def test_pages_are_served_and_linked(client):
     assert "localhost" not in landing
 
 
-def test_stocks_page_reports_missing_price_cache(empty_dir, client, monkeypatch, tmp_path):
+def test_markets_api_reports_missing_price_cache(empty_dir, client, monkeypatch, tmp_path):
     monkeypatch.setattr(stocks, "PRICES", tmp_path / "no_prices.parquet")
-    r = client.get("/stocks")
-    assert r.status_code == 503 and "Price cache not found" in r.text
+    r = client.get("/api/markets")
+    assert r.status_code == 503 and "Price cache not found" in r.json()["error"]
 
 
-def test_stocks_render_requires_placeholder():
-    with pytest.raises(ValueError):
-        stocks.render("<html>no data slot</html>")
-
-
-def test_stocks_template_has_placeholder():
-    assert stocks.DATA_PLACEHOLDER in (ROOT / "web" / "stocks.html").read_text()
+def test_markets_page_is_the_app_shell():
+    html = (ROOT / "web" / "markets.html").read_text()
+    assert 'id="app"' in html
+    assert "/api/markets" in html and "/api/advice" in html
 
 
 # ------------------------------------------------------------------- store --

@@ -98,3 +98,38 @@ Capital One branch coordinates: Nessie `/branches` records carry street addresse
 | Capital One | Nessie `/branches` + `/atms` (geocoded) and the SYNTHETIC portfolio, same 500 m rule | Nessie locations are all in the DC/Baltimore area, so a Hampton Roads coastal flood watch can genuinely show zero Capital One exposure. |
 | Satellite status | Sentinel-1 RTC scenes over the alert bbox in the last 30 days; next pass = last pass + 12 days per relative orbit | 12-day repeat per satellite per relative orbit; with 1A/1C/1D flying, effective revisit is shorter, so "next expected" is an upper bound. |
 | Refresh | Alerts and NHC re-fetched if older than 15 minutes; zone polygons and FDIC pulls cached indefinitely | NWS asks clients not to hammer the API; zone geometry does not change. |
+
+## Per-company signals (Stocks page, `config/signals.yaml`)
+
+| Choice | Value | Justification |
+|---|---|---|
+| Signal routing | COF → Nessie branches/ATMs + SYNTHETIC portfolio; other banks → FDIC deposits under NWS alerts; retailers → parking-lot radar; P&C insurers → NWS/NHC activity; ETFs → none | Each company gets the data that touches its business: a bank's risk is where its deposits and borrowers sit, a retailer's is foot traffic, an insurer's is catastrophe activity. |
+| Storm-history return | Excess log return vs KRE (banks) or SPY (insurers) from the last close before landfall to 5 closes after it, every storm in `storms.yaml` | Same window for every storm; landfall (not the satellite event time) because this block describes what the market did, not a tradeable signal. |
+| Retail stores | OSM ways with the brand's `brand:wikidata` tag, `amenity=parking` polygons within ~100 m, lot ≥ 8,000 m² | 8,000 m² ≈ 80 Sentinel-1 pixels, enough to average speckle; smaller lots are mostly noise. Metros without mapped lots (Atlanta) are skipped, not padded. |
+| Metros | Dallas, Atlanta, Phoenix, Chicago, Houston, Denver | Different climates, so rain or snow on one evening doesn't hit every store at once. |
+| Pass direction | Ascending only (~18:00–19:00 local over CONUS) | Descending passes are ~06:00 local, when lots are empty. |
+| Activity index | Lot dB minus roof dB in the same scene, z-scored per store, averaged across stores per evening | The roof reference absorbs neighbourhood-wide moisture/calibration changes; per-store z-scores stop big lots from dominating. 10 m pixels can't count cars, so this is a brightness proxy. |
+| No lookahead in normalisation | The chart z-scores each store over its full history; the YoY signal and backtest use expanding (past-only) store mean/std | A full-history z-score leaks future level and scale into past readings. |
+| Sanity check | Holiday season (Nov 15 – Dec 31) vs rest of year, Welch t-test | If the index measures cars, the holiday rush must show. Until it does (p < 0.10), the page labels the signal "unvalidated". |
+| YoY signal | Mean index over the trailing 91 days minus the same 91 days a year earlier, ≥ 4 evenings in each | Removes seasonality; a quarter matches the reporting cycle. |
+| Backtest | Enter at the first close ≥ acquisition + 3 days, hold 63 trading days, excess vs SPY; Spearman rank correlation with p-value on span ÷ horizon independent windows | 3-day lag covers MPC publication delay (no lookahead). Readings 12 days apart with 63-day holds overlap heavily, so the naive N would overstate significance. |
+| Verdict | "lean long/short" only if the index passes the sanity check AND the overlap-adjusted p < 0.10 with positive correlation; otherwise "unvalidated" / "no edge" | A weak or unvalidated signal should say so rather than nudge a trade. Not investment advice. |
+
+## Agent analysis (Markets page, `src/floodalpha/agent`, `config/signals.yaml` › `agent`)
+
+LLM: any OpenAI-compatible endpoint set in `.env` (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`). The current setting is the NRP Nautilus endpoint serving `qwen3`. Its reasoning output (`<think>` blocks) is stripped before the JSON is parsed.
+
+| Choice | Value | Justification |
+|---|---|---|
+| Focus company | Capital One (COF), always shown first | The research exists because of Capital One; its branch/ATM and synthetic-portfolio data are the most specific evidence we have for it. |
+| Covered universe | COF, WMT, JPM, BAC, WFC, C, USB, PNC, TFC, ALL, TRV, PGR, CB, KRE | Largest US banks by 2024 deposits, the four P&C insurers, and the regional-bank benchmark. Covering all ~95 tickers would cost ~95 LLM calls per run and add noise. |
+| Two-stage agents | One analyst per company (parallel, 4 workers), then one portfolio manager over the valid views | Each analyst sees only its own company's evidence, so its reasoning can't be swayed by others. The portfolio manager sees only the analysts' outputs. |
+| Evidence per company | Price trend, benchmark 1-year return, the company's own signal block (data source from `signals.yaml`), and its stock move after every past landfall | The agent must compare today's reading with history, so the history is part of the input rather than something it has to guess. |
+| Past storms | Summary (mean excess return, count underperformed) over all storms; the 12 most recent passed in full | A summary covers every storm; passing all rows adds tokens without adding information. |
+| Benchmark | KRE for banks, SPY for insurers and retailers | Same as the signal blocks, so the agent and the chart compare against the same index. |
+| Output schema | Analyst: view (positive/neutral/negative), confidence 0–100, expected move, reasoning, evidence, data gaps. Portfolio: focus action (buy/hold/avoid/watch), picks limited to covered tickers | Validated before saving; anything outside the schema is an error, not a guess. |
+| Failure handling | A failed analyst is recorded with its error; if none succeed or the portfolio reply is invalid the run is an error and nothing is shown as a recommendation | The user must never see a recommendation the agents did not actually produce. |
+| Caching & staleness | Result saved to `data/processed/agent/advice.json` with an evidence hash (all bundles + context + prompt version); the page flags it stale when the hash changes | The LLM is only called on demand (button or script). Stale advice is labelled rather than silently replaced. |
+| Temperature | 0.2 | Lower sampling noise so reruns on unchanged data mostly agree. |
+| Confidence | Self-reported by the model, 0–100 | Not calibrated; shown as a label only. Treat it as the model's stated certainty, not a probability. |
+| Not financial advice | The page and every run carry a research-only label | This is a hackathon prototype on a small sample of storms; the caveats above are part of the output. |

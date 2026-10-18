@@ -29,8 +29,8 @@ INSURER_NAMES = {
 }
 
 
-def ticker_meta(prices: pd.DataFrame, mapping: pd.DataFrame) -> dict[str, dict]:
-    """name + group for every ticker that has prices."""
+def ticker_meta(prices: pd.DataFrame, mapping: pd.DataFrame, retail: dict[str, dict] | None = None) -> dict[str, dict]:
+    """name + group for every ticker that has prices. `retail` = signals.yaml `retail` section."""
     banks = mapping[(mapping["ticker"] != "") & (mapping["status"] == "active")].drop_duplicates("ticker")
     out: dict[str, dict] = {}
     for r in banks.itertuples():
@@ -42,6 +42,9 @@ def ticker_meta(prices: pd.DataFrame, mapping: pd.DataFrame) -> dict[str, dict]:
         for t, n in names.items():
             if t in prices.columns:
                 out[t] = {"name": n, "group": group}
+    for t, spec in (retail or {}).items():
+        if t in prices.columns:
+            out[t] = {"name": spec["name"], "group": "Retail"}
     return out
 
 
@@ -99,9 +102,11 @@ def _clean(v: float) -> float | None:
 
 
 def build_payload(prices: pd.DataFrame, mapping: pd.DataFrame, exposure: pd.DataFrame | None,
-                  storms: dict, catalog: pd.DataFrame | None) -> dict:
+                  storms: dict, catalog: pd.DataFrame | None, retail: dict[str, dict] | None = None,
+                  signals_fn=None) -> dict:
+    """signals_fn(meta) -> {ticker: signal block}; see floodalpha.market.signals.build_signals."""
     px = prices.sort_index()
-    meta = ticker_meta(px, mapping)
+    meta = ticker_meta(px, mapping, retail)
     exp = alert_exposure_by_ticker(exposure, mapping)
     summary, series = {}, {}
     for t in meta:
@@ -115,5 +120,6 @@ def build_payload(prices: pd.DataFrame, mapping: pd.DataFrame, exposure: pd.Data
         "series": series,
         "summary": summary,
         "events": storm_events(storms, catalog, px.index.min(), px.index.max()),
+        "signals": signals_fn({t: meta[t] for t in summary}) if signals_fn else {},
         "as_of": px.index.max().strftime("%Y-%m-%d"),
     }
