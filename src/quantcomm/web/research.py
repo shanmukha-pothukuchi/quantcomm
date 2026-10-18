@@ -1,90 +1,97 @@
-"""Research payloads: every-bank exposure by storm, the market test and NFIP validation."""
+"""Research panels behind "Show research" on the Markets page: the data an analyst's call relies on.
+
+Which panels a company can show comes from agent.evidence.research_options, the same list its analyst picked from.
+Every panel is built from cached pipeline outputs; a missing output is reported with the script that makes it.
+Large geometries (alert polygons, flood polygons, storm track) are fetched by the page from the layer endpoints.
+"""
 from __future__ import annotations
 
-import pandas as pd
+from typing import Callable
 
-from quantcomm.config import ROOT
-from quantcomm.web import store
+import shapely
 
-BANK_COLS = ["bank_name", "ticker", "ticker_status", "sod_year", "total_deposits_k", "flooded_deposits_k",
-             "exposure_pct", "aoi_deposits_pct", "n_branches", "n_flooded_branches", "n_branches_in_aoi",
-             "n_branches_sar_covered"]
-EVENT_COLS = ["storm", "ticker", "bank_name", "exposure_pct", "aoi_deposits_pct", "day0", "days_landfall_to_day0",
-              "pre_car", "car_0_1", "car_0_5", "car_0_20", "beta", "n_est"]
-MAX_TRACT_ROWS = 500
+from quantcomm.agent.evidence import RESEARCH_PANELS, research_options
+from quantcomm.banks import tickers
+from quantcomm.web import live, store, storms
+
+FLOOD_STORM = "isaias"   # flagship case study: the only post-storm flood map of the current season
+TOP_BANKS = 15
+
+TITLES = {
+    "branch_map": "Capital One branches & ATMs under live flood alerts",
+    "customer_stress": "Customer portfolio stress test (SYNTHETIC)",
+    "flood_map": "Hurricane Isaias: Sentinel-1 satellite flood map",
+    "alert_exposure": "Bank deposits under live flood alerts",
+    "alerts_map": "Live flood alerts & tropical storms",
+    "parking_lot": "Parking-lot activity from satellite radar",
+    "storm_history": "How the stock moved after past hurricanes",
+}
 
 
-def bank_exposure(storm: str | None = None, definition: str | None = None) -> dict:
-    d = store.data_dir()
-    be = store.load_parquet(d / "bank_exposure.parquet")
-    if be is None:
-        return store.missing("Bank exposure table", d / "bank_exposure.parquet", "scripts/run_banks.py")
-    cfgs = store.storms_config()
-    storms = [s for s in cfgs if s in set(be["storm"])]
-    defs = sorted(be["definition"].unique())
-    storm = storm if storm in storms else (storms[0] if storms else None)
-    definition = definition if definition in defs else ("full" if "full" in defs else (defs[0] if defs else None))
-    v = be[(be["storm"] == storm) & (be["definition"] == definition)]
-    tk = ROOT / "config" / "bank_tickers.csv"
-    tickers = pd.read_csv(tk) if tk.exists() else None
+def _branch_map(ticker: str, payload: dict) -> dict:
+    return {"nessie": live.nessie_alerts(), "alerts": live.alert_overview()}
+
+
+def _customer_stress(ticker: str, payload: dict) -> dict:
+    return {"storm": FLOOD_STORM, "stress": storms.stress_test(FLOOD_STORM), "live": live.portfolio_alerts()}
+
+
+def _flood_map(ticker: str, payload: dict) -> dict:
+    sig = payload["signals"].get(ticker) or {}
+    nessie = storms.nessie_exposure(FLOOD_STORM) if sig.get("type") == "branch_network" else None
+    return {"storm": FLOOD_STORM, "name": store.storms_config()[FLOOD_STORM]["name"],
+            "flood": storms.flood_summary(FLOOD_STORM), "nessie": nessie}
+
+
+def _alert_exposure(ticker: str, payload: dict) -> dict:
+    return {"banks": live.bank_alerts(TOP_BANKS, tickers.load(), ticker), "alerts": live.alert_overview()}
+
+
+def _alerts_map(ticker: str, payload: dict) -> dict:
+    return {"alerts": live.alert_overview()}
+
+
+def _stores(ticker: str) -> list[dict]:
+    st = store.load_parquet(store.data_dir() / "retail" / f"{ticker}_stores.parquet")
+    if st is None or st.empty:
+        return []
+    pts = shapely.centroid(shapely.from_wkb(st["geometry"].values))
+    view = st.assign(lat=shapely.get_y(pts).round(5), lon=shapely.get_x(pts).round(5))
+    return store.records(view, ["store_id", "name", "city", "metro", "lat", "lon", "lot_area_m2"])
+
+
+def _parking_lot(ticker: str, payload: dict) -> dict:
+    sig = payload["signals"][ticker]
+    return {"series": sig.get("series"), "metrics": sig.get("metrics", []), "verdict": sig.get("verdict"),
+            "source": sig.get("source"), "stores": _stores(ticker), "caveats": sig.get("caveats", [])}
+
+
+def _storm_history(ticker: str, payload: dict) -> dict:
+    sig = payload["signals"][ticker]
+    bench = "SPY" if sig.get("type") == "weather_alerts" else "KRE"
+    return {"bench": bench, "window": "landfall → +5 trading days",
+            "rows": sig.get("storm_history", []), "events": payload.get("events", [])}
+
+
+BUILDERS: dict[str, Callable[[str, dict], dict]] = {
+    "branch_map": _branch_map, "customer_stress": _customer_stress, "flood_map": _flood_map,
+    "alert_exposure": _alert_exposure, "alerts_map": _alerts_map, "parking_lot": _parking_lot,
+    "storm_history": _storm_history,
+}
+
+
+def ticker_research(payload: dict, ticker: str, keys: list[str] | None = None) -> dict:
+    """Panels for one company: all its research options, or only `keys` (unknown keys are a KeyError -> 404)."""
+    if ticker not in payload["summary"]:
+        raise KeyError(ticker)
+    options = research_options(payload["signals"].get(ticker))
+    wanted = options if not keys else keys
+    bad = [k for k in wanted if k not in options]
+    if bad:
+        raise KeyError(f"{ticker} research panel {', '.join(bad)}")
     return {
-        "available": True, "source": store.rel(d / "bank_exposure.parquet"),
-        "storms": [{"key": s, "name": cfgs[s]["name"], "year": cfgs[s]["year"]} for s in storms],
-        "definitions": defs, "storm": storm, "definition": definition,
-        "rows": store.records(v.sort_values("exposure_pct", ascending=False), BANK_COLS),
-        "report": store.load_json(d / "bank_exposure_report.json"),
-        "ticker_counts": None if tickers is None else {
-            "active": int((tickers["status"] == "active").sum()), "delisted": int((tickers["status"] == "delisted").sum())},
+        "ticker": ticker, "name": payload["summary"][ticker]["name"], "as_of": payload.get("as_of"),
+        "options": [{"key": k, "title": TITLES[k], "shows": RESEARCH_PANELS[k]} for k in options],
+        "panels": {k: {"title": TITLES[k], **BUILDERS[k](ticker, payload)} for k in wanted},
     }
 
-
-def _cross_section_rows(cs: dict) -> list[dict]:
-    rows = []
-    for defn, by_meas in (cs.get("by_definition") or {}).items():
-        for meas, by_win in by_meas.items():
-            for win, r in by_win.items():
-                rows.append({"definition": defn, "measure": meas, "window": win, "coef_per_pct": store.clean(r.get("coef_per_pct")),
-                             "t": store.clean(r.get("t")), "p": store.clean(r.get("p")), "n": r.get("n"),
-                             "n_storms": r.get("n_storms"), "n_nonzero": r.get("n_nonzero_exposure"),
-                             "se_type": r.get("se_type"), "note": r.get("note", "")})
-    return rows
-
-
-def market() -> dict:
-    d = store.data_dir()
-    cs = store.load_json(d / "cross_section.json")
-    es = store.load_parquet(d / "event_study.parquet")
-    bt = store.load_parquet(d / "backtest.parquet")
-    bts = store.load_json(d / "backtest_summary.json")
-    if cs is None and es is None and bts is None:
-        return store.missing("Market test", d / "event_study.parquet", "scripts/run_market.py")
-    full = es[es["definition"] == "full"] if es is not None and "definition" in es else es
-    model = store.config("model.yaml").get("event_study") or {}
-    return {
-        "available": True,
-        "benchmark": model.get("benchmark", "KRE"), "estimation_window": model.get("estimation_window", [-250, -30]),
-        "caveats": (cs or {}).get("caveats") or [],
-        "cross_section": _cross_section_rows(cs) if cs else [],
-        "event_study": store.records(full, EVENT_COLS),
-        "n_storms": int(full["storm"].nunique()) if full is not None else None,
-        "backtest_summary": bts, "backtest": store.records(bt),
-        "sources": [store.rel(d / f) for f in ("cross_section.json", "event_study.parquet", "backtest_summary.json")],
-    }
-
-
-def validation() -> dict:
-    v = store.data_dir() / "validation"
-    vs = store.load_json(v / "validation_summary.json")
-    if vs is None:
-        return store.missing("Validation summary", v / "validation_summary.json", "scripts/run_validation.py")
-    grid = store.load_parquet(v / "threshold_grid.parquet")
-    tv = store.load_parquet(v / "tract_validation.parquet")
-    if tv is not None and "sar_covered" in tv:
-        tv = tv[tv["sar_covered"]].sort_values("n_claims", ascending=False).head(MAX_TRACT_ROWS)
-    return {"available": True, "source": store.rel(v / "validation_summary.json"), "summary": vs,
-            "threshold_grid": store.records(grid), "tracts": store.records(tv)}
-
-
-def methodology() -> dict:
-    return {"assumptions_md": store.load_text(ROOT / "ASSUMPTIONS.md"), "model": store.config("model.yaml"),
-            "storms_done": store.completed_storms()}

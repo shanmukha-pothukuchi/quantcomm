@@ -35,7 +35,7 @@ Live demo: the mid-Atlantic coastal flood event (Outer Banks → Hampton Roads �
  OpenFEMA NFIP claims v3 ─────────────────┤ validation/nfip.py                  claims vs flood %, threshold tuning
  api.weather.gov · NHC CurrentStorms ─────┘ live/alerts.py, live/exposure.py    pre-event exposure, next pass
                                           ▼
-                          quantcomm.web (FastAPI): /  landing · /dashboard  6 tabs · /stocks
+                          quantcomm.web (FastAPI): /  landing · /stocks  Markets app + research popups
 ```
 
 ## Run
@@ -50,14 +50,18 @@ cp .env.example .env                       # NESSIE_API_KEY (writes only); CENSU
 .venv/bin/python scripts/run_market.py     # prices, event study, cross-section, backtest
 .venv/bin/python scripts/run_validation.py # NFIP claims vs flood maps, threshold grid
 .venv/bin/python scripts/run_live.py       # alerts, NHC, pre-event exposure, satellite status
-.venv/bin/python -m quantcomm.web         # http://127.0.0.1:8000  (/, /dashboard, /stocks, /api/docs)
+.venv/bin/python -m quantcomm.web         # http://127.0.0.1:8000  (/, /stocks, /api/docs)
 .venv/bin/python -m pytest -q
 ```
 
-The site is one FastAPI app (`src/quantcomm/web/`) serving static pages from `web/`: the landing page at `/`,
-the dashboard at `/dashboard` (storm case study, live, bank exposure, market test, validation, methodology) and
-the bank/ETF/insurer/retail stocks page at `/stocks`. Pages read a small JSON API (`/api/*`) built only from
-`data/processed/`; a missing output is shown as "not generated yet" with the script that produces it.
+The site is one FastAPI app (`src/quantcomm/web/`) serving static pages from `web/`: the landing page at `/`
+(every logo links there) and the Markets app at `/stocks`. On Markets, each AI analyst (`scripts/run_advice.py` or
+the Run analysis button) returns a 20-trading-day return forecast, drawn on the chart as a dashed "AI predicted" line
+with its likely range, and picks the research panels its call relies on. "Show research" opens those panels in a
+popup: Capital One branch/ATM map under live alerts, the SYNTHETIC portfolio stress test, the Isaias Sentinel-1 flood
+map, bank deposits under alerts, the live alert map, Walmart parking-lot radar, or past-storm returns
+(`/api/research/{ticker}`). Pages read a small JSON API (`/api/*`) built only from `data/processed/`; a missing output
+is shown as "not generated yet" with the script that produces it.
 
 Config lives in `config/storms.yaml` (12 storms, AOIs, landfall times) and `config/model.yaml` (thresholds, PD/LGD,
 buffers). Raw pulls are cached in `data/raw/`, outputs in `data/processed/` (column contracts in `src/quantcomm/schemas.py`).

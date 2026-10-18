@@ -79,25 +79,10 @@ def _write_live(d):
     pd.DataFrame({"in_alert": [True, False], "loan_amount": [1000.0, 5.0]}).to_parquet(live / "SYNTHETIC_portfolio_alert_exposure.parquet")
 
 
-def _write_research(d):
-    pd.DataFrame({"storm": [STORM, STORM, STORM], "definition": ["full", "full", "strict"], "bank_name": ["A", "B", "A"],
-                  "ticker": ["AAA", "", "AAA"], "total_deposits_k": [2e6, 5e5, 2e6], "flooded_deposits_k": [1e4, 0.0, 0.0],
-                  "exposure_pct": [0.5, 0.0, 0.0], "aoi_deposits_pct": [3.0, 1.0, 3.0], "n_branches_in_aoi": [2, 1, 2]}
-                 ).to_parquet(d / "bank_exposure.parquet")
-    (d / "cross_section.json").write_text(json.dumps({"caveats": ["small sample"], "by_definition": {
-        "full": {"exposure_pct": {"car_0_1": {"coef_per_pct": -0.7, "t": -7.8, "p": 0.0, "n": 10, "n_storms": 2, "n_nonzero_exposure": 1}}}}}))
-    pd.DataFrame({"storm": [STORM], "definition": ["full"], "ticker": ["AAA"], "bank_name": ["A"], "exposure_pct": [0.5],
-                  "car_0_1": [-0.01], "car_0_5": [float("nan")]}).to_parquet(d / "event_study.parquet")
-    v = d / "validation"
-    v.mkdir()
-    (v / "validation_summary.json").write_text(json.dumps({"pooled": {"n_tracts": 10, "auc_pct_flooded": 0.54}}))
-
-
 @pytest.fixture()
 def full_dir(empty_dir):
     _write_storm(empty_dir)
     _write_live(empty_dir)
-    _write_research(empty_dir)
     return empty_dir
 
 
@@ -114,44 +99,84 @@ def _data(client, url):
     return body["data"]
 
 
-# ------------------------------------------------------------ empty outputs --
-@pytest.mark.parametrize("url", ["/api/banks", "/api/market", "/api/validation"])
-def test_missing_research_outputs_say_which_script(empty_dir, client, url):
-    d = _data(client, url)
-    assert d["available"] is False
-    assert d["hint"].startswith("scripts/run_")
+def _payload(signals: dict) -> dict:
+    """Minimal stock payload: the research endpoint reads only summary, signals and events."""
+    summary = {t: {"name": f"{t} Corp.", "group": "Large banks"} for t in ("COF", "JPM", "WMT", "KRE")}
+    return {"as_of": "2026-10-16", "summary": summary, "signals": signals,
+            "events": [{"key": STORM, "name": "Isaias", "landfall": "2026-10-10T01:30:00"}]}
 
 
-def test_missing_storm_and_live_outputs_are_not_errors(empty_dir, client):
-    storm = _data(client, f"/api/storms/{STORM}")
-    for part in ("flood", "nws", "nessie", "stress", "catalog"):
-        assert storm[part]["available"] is False, part
-    live = _data(client, "/api/live")
-    for part in ("summary", "nhc", "banks", "nessie", "portfolio", "satellite"):
-        assert live[part]["available"] is False, part
-    assert _data(client, "/api/live/alerts") is None
-    assert _data(client, f"/api/storms/{STORM}/layers/polygons") is None
-    assert all(not s["done"] for s in _data(client, "/api/storms"))
+HIST = [{"storm": "Ian", "year": 2022, "excess_pct": -1.5}]
+SIGNALS = {
+    "COF": {"type": "branch_network", "storm_history": HIST},
+    "JPM": {"type": "flood_deposits", "storm_history": HIST},
+    "WMT": {"type": "parking_lot_sar", "series": {"dates": ["2026-01-01"], "values": [0.1], "signal_dates": [], "signal_values": []},
+            "metrics": [], "verdict": {"stance": "no edge", "reason": "r"}, "source": "S1", "caveats": ["c"]},
+    "KRE": {"type": "benchmark"},
+}
 
 
-# ------------------------------------------------------------- full outputs --
-def test_storm_case_payload_carries_pipeline_values(full_dir, client):
-    d = _data(client, f"/api/storms/{STORM}")
-    f = d["flood"]
+@pytest.fixture()
+def research_client(monkeypatch):
+    monkeypatch.setattr(stocks, "payload", lambda: _payload(SIGNALS))
+    return TestClient(server.create_app())
+
+
+# ------------------------------------------------------------ research panels --
+def test_every_research_panel_has_a_builder_and_a_title():
+    from quantcomm.agent.evidence import RESEARCH_PANELS
+    from quantcomm.web import research
+    assert set(research.BUILDERS) == set(RESEARCH_PANELS) == set(research.TITLES)
+
+
+def test_missing_outputs_are_reported_per_panel_not_errors(empty_dir, research_client):
+    d = _data(research_client, "/api/research/COF")
+    assert [o["key"] for o in d["options"]] == ["branch_map", "customer_stress", "flood_map", "storm_history"]
+    p = d["panels"]
+    assert p["branch_map"]["nessie"]["available"] is False and p["branch_map"]["alerts"]["hint"] == "scripts/run_live.py"
+    assert p["customer_stress"]["stress"]["available"] is False
+    assert p["flood_map"]["flood"]["hint"].startswith("scripts/run_storm.py")
+    assert _data(research_client, "/api/live/alerts") is None
+    assert _data(research_client, f"/api/storms/{STORM}/layers/polygons") is None
+
+
+def test_capital_one_research_carries_branches_stress_and_flood_map(full_dir, research_client):
+    p = _data(research_client, "/api/research/COF")["panels"]
+    assert p["branch_map"]["nessie"]["n"] == 1 and p["branch_map"]["alerts"]["n_alerts_conus"] == 2
+    groups = {g["group_label"]: g for g in p["customer_stress"]["stress"]["groups"]}
+    assert groups["Flooded tract"]["n"] == 1 and groups["Not flooded"]["loss_rate_pct"] == pytest.approx(100 * 9 / 900)
+    assert p["customer_stress"]["stress"]["synthetic"] is True and p["customer_stress"]["live"]["loan_in_alert"] == 1000.0
+    f = p["flood_map"]["flood"]
     assert f["flooded_km2"] == 3.4 and f["event_time_utc"] == EVENT and f["previews"] == ["preview_change.png"]
-    assert f["passes"][0]["frames"] == 2 and f["passes"][0]["hours_after_landfall"] == pytest.approx(22.2, abs=0.1)
-    sens = {r["threshold_db"]: r for r in f["sensitivity"]}
-    assert sens[-3.0]["km2_darker"] == 45.6 and sens[-3.0]["used"] is True  # summed over frames
-    assert d["nws"]["counties"][0] == {"county": "Gulf (FL)", "flooded_km2": 0.4, "fema_declared": True}
-    n = d["nessie"]
-    assert (n["n"], n["n_in_aoi"], n["n_exposed"]) == (3, 1, 1)
-    assert n["locations"][0]["name"] == "C"  # exposed first
-    groups = {g["group_label"]: g for g in d["stress"]["groups"]}
-    assert groups["Flooded tract"]["n"] == 1 and groups["Not flooded"]["n"] == 3
-    assert groups["Not flooded"]["loss_rate_pct"] == pytest.approx(100 * 9 / 900)
-    assert d["stress"]["synthetic"] is True and d["stress"]["incremental_expected_loss"] == 6.67
-    assert "geometry_json" not in d["catalog"]["rows"][0] and "vv_href" not in d["catalog"]["rows"][0]
-    assert _data(client, "/api/storms")[next(i for i, s in enumerate(store.storms_config()) if s == STORM)]["done"] is True
+    n = p["flood_map"]["nessie"]
+    assert (n["n"], n["n_exposed"]) == (3, 1) and n["locations"][0]["name"] == "C"  # exposed first
+
+
+def test_bank_research_ranks_banks_under_alerts(full_dir, research_client):
+    d = _data(research_client, "/api/research/JPM?panels=alert_exposure,storm_history")
+    assert list(d["panels"]) == ["alert_exposure", "storm_history"]
+    banks = d["panels"]["alert_exposure"]["banks"]
+    assert [r["bank_name"] for r in banks["rows"]] == ["Big", "Small"]
+    assert banks["ticker_rows"] == []  # fixture rows carry no cert/rssdhcr, so nothing is tagged
+    assert d["panels"]["storm_history"]["rows"] == HIST and d["panels"]["storm_history"]["bench"] == "KRE"
+    assert _data(research_client, "/api/research/JPM?panels=flood_map")["panels"]["flood_map"]["nessie"] is None
+
+
+def test_retail_research_is_the_parking_lot_panel(empty_dir, research_client):
+    d = _data(research_client, "/api/research/WMT")
+    assert [o["key"] for o in d["options"]] == ["parking_lot"]
+    assert d["panels"]["parking_lot"]["series"]["values"] == [0.1] and d["panels"]["parking_lot"]["stores"] == []
+
+
+def test_benchmark_has_no_research(empty_dir, research_client):
+    d = _data(research_client, "/api/research/KRE")
+    assert d["options"] == [] and d["panels"] == {}
+
+
+@pytest.mark.parametrize("url", ["/api/research/NOPE", "/api/research/WMT?panels=branch_map"])
+def test_unknown_ticker_or_panel_is_a_404(empty_dir, research_client, url):
+    r = research_client.get(url)
+    assert r.status_code == 404 and r.json()["success"] is False
 
 
 def test_polygon_layer_is_json_safe_geojson(full_dir, client):
@@ -160,38 +185,24 @@ def test_polygon_layer_is_json_safe_geojson(full_dir, client):
     assert set(gj["features"][0]["properties"]) == {"pass_id", "area_m2"}  # timestamps dropped, nothing unserializable
 
 
-def test_live_payload_sorts_banks_and_strips_bulky_fields(full_dir, client):
-    d = _data(client, "/api/live")
-    assert [r["bank_name"] for r in d["banks"]["rows"]] == ["Big", "Small"]
-    assert "top10" not in d["summary"]["banks"]
-    assert d["portfolio"]["synthetic"] is True and d["portfolio"]["loan_in_alert"] == 1000.0
+def test_live_alert_polygons_keep_only_display_fields(full_dir, client):
     alerts = _data(client, "/api/live/alerts")
     assert len(alerts["features"]) == 2
     assert set(alerts["features"][0]["properties"]) == {"event", "onset"}
     assert isinstance(alerts["features"][0]["properties"]["onset"], str)
 
 
-def test_bank_exposure_filters_storm_and_definition(full_dir, client):
-    d = _data(client, f"/api/banks?storm={STORM}&definition=strict")
-    assert d["definition"] == "strict" and len(d["rows"]) == 1
-    d = _data(client, "/api/banks?storm=nope&definition=nope")  # unknown values fall back, never 500
-    assert d["storm"] == STORM and d["definition"] == "full" and len(d["rows"]) == 2
-
-
-def test_market_and_validation_payloads(full_dir, client):
-    m = _data(client, "/api/market")
-    assert m["caveats"] == ["small sample"]
-    assert m["cross_section"][0]["coef_per_pct"] == -0.7 and m["cross_section"][0]["n_nonzero"] == 1
-    assert m["event_study"][0]["car_0_5"] is None  # NaN -> null
-    assert _data(client, "/api/validation")["summary"]["pooled"]["auc_pct_flooded"] == 0.54
-
-
 # ------------------------------------------------------------------ routing --
-@pytest.mark.parametrize("url", ["/api/storms/atlantis", "/api/storms/atlantis/layers/polygons", f"/api/storms/{STORM}/layers/secrets"])
+@pytest.mark.parametrize("url", ["/api/storms/atlantis/layers/polygons", f"/api/storms/{STORM}/layers/secrets"])
 def test_unknown_keys_are_404_envelopes(empty_dir, client, url):
     r = client.get(url)
     assert r.status_code == 404
     assert r.json()["success"] is False and r.json()["error"]
+
+
+@pytest.mark.parametrize("url", ["/dashboard", "/about", "/api/banks", "/api/market", "/api/validation", "/api/storms"])
+def test_dashboard_routes_are_gone(client, url):
+    assert client.get(url).status_code == 404
 
 
 @pytest.mark.parametrize("url", [f"/media/{STORM}/flood_meta.json", f"/media/{STORM}/..%2F..%2F.env", "/media/atlantis/preview_change.png"])
@@ -204,16 +215,18 @@ def test_media_serves_preview_png(full_dir, client):
     assert r.status_code == 200 and r.headers["content-type"] == "image/png"
 
 
-def test_pages_are_served_and_linked(client):
-    for url in ("/", "/dashboard"):
+def test_landing_is_home_and_links_to_the_markets_app(client):
+    for url in ("/", "/stocks"):
         r = client.get(url)
         assert r.status_code == 200 and "text/html" in r.headers["content-type"]
     landing = (ROOT / "web" / "index.html").read_text()
-    assert 'href="/dashboard"' in landing and 'href="/stocks"' in landing
+    assert 'href="/stocks"' in landing and "/dashboard" not in landing
     assert "localhost" not in landing
+    markets_page = (ROOT / "web" / "markets.html").read_text()
+    assert 'class="brand" href="/"' in markets_page and "/dashboard" not in markets_page
 
 
-BRAND_PAGES = ("markets.html", "index.html", "dashboard.html")
+BRAND_PAGES = ("markets.html", "index.html")
 
 
 def test_pages_use_the_quantcomm_logo_and_favicon():

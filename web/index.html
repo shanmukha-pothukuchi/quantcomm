@@ -17,17 +17,16 @@
 
 <!-- ============ NAV ============ -->
 <header class="nav">
-  <a class="brand" href="#top" aria-label="Quantcomm home">
+  <a class="brand" href="/" aria-label="Quantcomm home">
     <img class="brand-mark" src="/assets/brand/mark.png" alt="" aria-hidden="true" width="28" height="28">Quantcomm
   </a>
   <nav class="nav-links" id="nav-links" aria-label="Sections">
     <a href="#how">How it works</a>
     <a href="#tools">Tools</a>
     <a href="#results">Results</a>
-    <a href="/dashboard">Dashboard</a>
-    <a href="/stocks">Stocks</a>
+    <a href="/stocks">Markets</a>
   </nav>
-  <a class="btn btn-ghost nav-cta" href="/dashboard">Open dashboard</a>
+  <a class="btn btn-ghost nav-cta" href="/stocks">Open Markets</a>
   <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
     <span></span><span></span>
   </button>
@@ -41,8 +40,7 @@
   <h1 class="reveal">See the Flood <span class="muted">Before the Filings.</span></h1>
   <p class="lede reveal">Banks don't know their flood exposure for weeks after a storm. Free radar satellites can estimate it within days. We measure it for every US bank, stress-test a Capital One portfolio, and test whether the market prices it in.</p>
   <div class="hero-ctas reveal">
-    <a class="btn btn-glow" href="/dashboard">Open the dashboard <span aria-hidden="true">→</span></a>
-    <a class="btn btn-ghost" href="/stocks">See the stocks</a>
+    <a class="btn btn-glow" href="/stocks">Open Markets <span aria-hidden="true">→</span></a>
   </div>
 
   <div class="hero-stage reveal" aria-label="Illustration: deposit columns partly submerged under a radar-mapped waterline">
@@ -102,7 +100,7 @@
 <section class="section" id="tools">
   <div class="section-head reveal">
     <h2><span class="light">Explore Our</span><br>Six Lenses on a Storm</h2>
-    <a class="btn btn-ghost btn-sm" href="/dashboard">Try the dashboard</a>
+    <a class="btn btn-ghost btn-sm" href="/stocks">See it in Markets</a>
   </div>
 
   <div class="bento">
@@ -111,7 +109,7 @@
       <div class="card-copy">
         <h3>Flood Map</h3>
         <p>Before/after Sentinel-1 imagery, the change-detection mask and its polygons for any storm in the catalogue.</p>
-        <a class="more" href="/dashboard#case">Learn more <span aria-hidden="true">›</span></a>
+        <a class="more" href="/stocks">Learn more <span aria-hidden="true">›</span></a>
       </div>
       <div class="mock mock-sar">
         <div class="sar-pane"><span class="tag">Pre · orbit 19 asc</span><div class="sar sar-pre"></div></div>
@@ -124,7 +122,7 @@
       <div class="card-copy">
         <h3>Bank Exposure</h3>
         <p>Share of each bank's deposits in flooded branches, for every FDIC-insured bank, storm by storm.</p>
-        <a class="more" href="/dashboard#banks">Learn more <span aria-hidden="true">›</span></a>
+        <a class="more" href="/stocks">Learn more <span aria-hidden="true">›</span></a>
       </div>
       <div class="mock">
         <div class="mock-title">Banks with flooded deposits</div>
@@ -144,7 +142,7 @@
       <div class="card-copy">
         <h3>Capital One Stress Test <span class="badge-synth">SYNTHETIC</span></h3>
         <p>500 generated customers created in the Nessie sandbox, incomes drawn from ACS tract medians. Expected loss = EAD × PD × LGD.</p>
-        <a class="more" href="/dashboard#case">Learn more <span aria-hidden="true">›</span></a>
+        <a class="more" href="/stocks">Learn more <span aria-hidden="true">›</span></a>
       </div>
       <div class="mock mock-kpis">
         <div><span>Exposure at default</span><b>$23.4 M</b></div>
@@ -159,7 +157,7 @@
       <div class="card-copy">
         <h3>Market Test</h3>
         <p>Event-study abnormal returns vs KRE, a cross-section with storm fixed effects, and a long-short backtest.</p>
-        <a class="more" href="/dashboard#market">Learn more <span aria-hidden="true">›</span></a>
+        <a class="more" href="/stocks">Learn more <span aria-hidden="true">›</span></a>
       </div>
       <div class="mock">
         <div class="mock-title">CAR per pct of flooded deposits <span class="verdict">Null result</span></div>
@@ -177,7 +175,7 @@
       <div class="card-copy">
         <h3>Validation</h3>
         <p>Tract-level percent flooded against OpenFEMA NFIP claims across 10 storms, thresholds tuned on training storms only.</p>
-        <a class="more" href="/dashboard#validation">Learn more <span aria-hidden="true">›</span></a>
+        <a class="more" href="/stocks">Learn more <span aria-hidden="true">›</span></a>
       </div>
       <div class="mock">
         <div class="mock-title">AUC: does the tract have claims?</div>
@@ -198,7 +196,7 @@
       <div class="card-copy">
         <h3>Live Mode</h3>
         <p>Active NWS flood alerts and NHC storms become pre-event exposure for every bank, plus when the next radar pass lands.</p>
-        <a class="more" href="/dashboard#live">Learn more <span aria-hidden="true">›</span></a>
+        <a class="more" href="/stocks">Learn more <span aria-hidden="true">›</span></a>
       </div>
       <div class="mock mock-live">
         <div class="mock-title">Active alerts <span class="mono stamp">snapshot 2026-10-18 03:23 UTC</span></div>
@@ -250,7 +248,7 @@
         <li>Only ~19 of ~1,400 storm-bank pairs carry non-zero satellite exposure, so the market test has little to work with.</li>
         <li>The long-short backtest made 2 trades and lost on both (−0.70 % at 5 days, −1.04 % at 20 days, 10 bp/side).</li>
       </ul>
-      <p class="fine">A clean null is still a result. Every threshold, PD uplift and buffer is justified in <a href="/dashboard#method">the methodology</a>.</p>
+      <p class="fine">A clean null is still a result. Every threshold, PD uplift and buffer is justified in the project's ASSUMPTIONS.md.</p>
     </article>
   </div>
 
@@ -266,10 +264,9 @@
 <section class="cta">
   <div class="cta-glow" aria-hidden="true"></div>
   <h2 class="reveal"><span class="light">Ready to See</span> the Storm<br>Differently?</h2>
-  <p class="reveal">Explore every storm, the live alerts and the bank stocks in one place.</p>
+  <p class="reveal">Charts, the AI agents' calls and predicted path, and the research behind each call.</p>
   <div class="cta-row reveal">
-    <a class="btn btn-ghost" href="/stocks">Bank stocks</a>
-    <a class="btn btn-glow" href="/dashboard">Launch dashboard <span aria-hidden="true">→</span></a>
+    <a class="btn btn-glow" href="/stocks">Open Markets <span aria-hidden="true">→</span></a>
   </div>
 </section>
 </main>
@@ -278,13 +275,13 @@
 <footer class="footer">
   <div class="foot-top">
     <div class="foot-brand">
-      <a class="brand" href="#top"><img class="brand-mark" src="/assets/brand/mark.png" alt="" aria-hidden="true" width="28" height="28">Quantcomm</a>
+      <a class="brand" href="/"><img class="brand-mark" src="/assets/brand/mark.png" alt="" aria-hidden="true" width="28" height="28">Quantcomm</a>
       <p>Satellite flood exposure for every US bank.</p>
     </div>
     <div class="foot-cols">
-      <div><h4>Dashboard</h4><a href="/dashboard#case">Storm case study</a><a href="/dashboard#live">Live</a><a href="/dashboard#banks">Bank exposure</a><a href="/dashboard#market">Market test</a><a href="/dashboard#validation">Validation</a><a href="/stocks">Stocks</a></div>
+      <div><h4>App</h4><a href="/stocks">Markets</a><a href="#how">How it works</a><a href="#results">Results</a></div>
       <div><h4>Data</h4><span>Sentinel-1 RTC</span><span>FDIC Summary of Deposits</span><span>OpenFEMA NFIP</span><span>Capital One Nessie</span><span>NWS · NHC</span></div>
-      <div><h4>Project</h4><a href="/dashboard#method">Methodology</a><a href="/api/docs">API</a></div>
+      <div><h4>Project</h4><a href="/api/docs">API</a></div>
     </div>
   </div>
   <div class="foot-bottom">

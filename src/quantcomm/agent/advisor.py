@@ -19,6 +19,8 @@ EXPECTED_MOVES = ("up", "flat", "down")
 ACTIONS = ("buy", "hold", "avoid")
 FOCUS_ACTIONS = ("buy", "hold", "avoid", "watch")
 RECOVERABLE = (LLMError, ValueError, KeyError, TypeError)
+MAX_FORECAST_PCT = 50.0   # a 20-day bank/retail stock forecast beyond +-50% is a broken reply, not a view
+FORECAST_SIGN = {"up": 1, "down": -1}
 
 
 def _choice(v, allowed: tuple, where: str) -> None:
@@ -44,7 +46,38 @@ def _texts(v, where: str) -> list[str]:
     return list(v)
 
 
-def validate_analyst(obj: dict, ticker: str) -> dict:
+def _pct(v, where: str) -> float:
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"forecast {where} must be a number; got {v!r}")
+    if abs(v) > MAX_FORECAST_PCT:
+        raise ValueError(f"forecast {where} must be within +-{MAX_FORECAST_PCT:.0f}%; got {v!r}")
+    return round(float(v), 2)
+
+
+def _forecast(v, move: str, bundle: dict) -> dict:
+    """Return forecast over the bundle's horizon, anchored to the close the analyst saw."""
+    if not isinstance(v, dict):
+        raise ValueError("forecast must be an object with return_pct, low_pct, high_pct")
+    r, lo, hi = (_pct(v.get(k), k) for k in ("return_pct", "low_pct", "high_pct"))
+    if not lo <= r <= hi:
+        raise ValueError(f"forecast needs low_pct <= return_pct <= high_pct; got {lo}, {r}, {hi}")
+    if move in FORECAST_SIGN and r * FORECAST_SIGN[move] <= 0:
+        raise ValueError(f"forecast return_pct {r} contradicts expected_move {move!r}")
+    return {"horizon_days": int(bundle["forecast_horizon_days"]), "from_date": bundle["price"]["as_of"],
+            "from_price": bundle["price"]["last"], "return_pct": r, "low_pct": lo, "high_pct": hi}
+
+
+def _research(v, bundle: dict) -> list[str]:
+    allowed = [o["key"] for o in bundle.get("research_options", [])]
+    keys = _texts(v if v is not None else [], "research")
+    unknown = [k for k in keys if k not in allowed]
+    if unknown:
+        raise ValueError(f"research {unknown} not in research_options {allowed}")
+    return list(dict.fromkeys(keys))
+
+
+def validate_analyst(obj: dict, bundle: dict) -> dict:
+    ticker = bundle["ticker"]
     if obj.get("ticker") != ticker:
         raise ValueError(f"ticker mismatch: expected {ticker}, got {obj.get('ticker')!r}")
     _choice(obj.get("view"), VIEWS, "view")
@@ -55,6 +88,8 @@ def validate_analyst(obj: dict, ticker: str) -> dict:
         "headline": _text(obj.get("headline"), "headline"), "reasoning": _text(obj.get("reasoning"), "reasoning"),
         "evidence_used": _texts(obj.get("evidence_used", []), "evidence_used"),
         "data_gaps": _texts(obj.get("data_gaps", []), "data_gaps"),
+        "forecast": _forecast(obj.get("forecast"), obj["expected_move"], bundle),
+        "research": _research(obj.get("research"), bundle),
     }
 
 
@@ -85,7 +120,7 @@ def validate_portfolio(obj: dict, universe: list[str], focus: str) -> dict:
 
 def _analyze(bundle: dict, client) -> dict:
     raw = client.chat_json(ANALYST_SYSTEM, json.dumps(bundle, default=str))
-    return validate_analyst(raw, bundle["ticker"])
+    return validate_analyst(raw, bundle)
 
 
 def run_analysts(bundles: list[dict], client, max_workers: int) -> dict[str, dict]:

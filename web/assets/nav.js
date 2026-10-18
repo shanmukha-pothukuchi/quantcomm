@@ -1,4 +1,4 @@
-// Shared site nav: mobile menu toggle for the landing page and dashboard.
+// Shared site nav: mobile menu toggle for the landing page.
 (() => {
   "use strict";
   const toggle = document.getElementById("nav-toggle");

@@ -47,7 +47,8 @@ class FakeClient:
         import json as _j
         t = _j.loads(user)["ticker"]
         return {"ticker": t, "view": "neutral", "confidence": 50, "expected_move": "flat", "headline": "h",
-                "reasoning": "r", "evidence_used": [], "data_gaps": []}
+                "reasoning": "r", "evidence_used": [], "data_gaps": [],
+                "forecast": {"return_pct": 0.5, "low_pct": -2.0, "high_pct": 3.0}, "research": []}
 
 
 @pytest.fixture()
@@ -75,6 +76,8 @@ def test_ticker_detail_has_series_benchmark_events_and_signal(api):
     assert d["benchmark"]["ticker"] == "KRE" and d["benchmark"]["closes"][0] == 50
     assert d["events"][0]["name"] == "Isaias"
     assert d["signal"]["metrics"][0]["label"] == "Branches/ATMs under alerts"
+    assert d["research_options"] == ["branch_map", "customer_stress", "flood_map"]  # no storm history in the fixture
+    assert api.get("/api/markets/KRE").json()["data"]["research_options"] == []
 
 
 def test_unknown_ticker_is_a_404_envelope(api):
@@ -117,8 +120,8 @@ def test_failed_run_is_saved_as_an_error_with_no_portfolio(api, monkeypatch):
     assert advisor.load(markets.ADVICE_PATH)["status"] == "error"
 
 
-def test_pages_route_to_the_markets_app(api):
-    for url in ("/", "/stocks"):
-        r = api.get(url)
-        assert r.status_code == 200 and "Capital One" in r.text and 'id="app"' in r.text
-    assert "Quantcomm" in api.get("/about").text
+def test_stocks_routes_to_the_markets_app_and_home_to_the_landing_page(api):
+    r = api.get("/stocks")
+    assert r.status_code == 200 and "Capital One" in r.text and 'id="app"' in r.text
+    home = api.get("/")
+    assert home.status_code == 200 and "Quantcomm" in home.text and 'id="app"' not in home.text

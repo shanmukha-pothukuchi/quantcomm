@@ -3,8 +3,10 @@
   "configurations": [
     {
       "name": "quantcomm-web",
-      "runtimeExecutable": ".venv/bin/python",
+      "runtimeExecutable": "/usr/bin/env",
       "runtimeArgs": [
+        "PYTHONPATH=src",
+        ".venv/bin/python",
         "-m",
         "quantcomm.web",
         "--port",

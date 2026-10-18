@@ -3,6 +3,9 @@
 A bundle has the company's price trend, the benchmark's trend, its data-source signal (Capital One branches and
 ATMs, Walmart parking-lot radar, flood alerts, ...) and its history after past landfalls. Nothing is invented:
 missing inputs stay None and are listed in `data_gaps`.
+
+It also lists the research panels the page can show for this company (`research_options`); the analyst picks the
+ones its reasoning relies on, and the Markets page opens exactly those behind "Show research".
 """
 from __future__ import annotations
 
@@ -14,6 +17,24 @@ HISTORY_ROWS = 12                       # most recent past storms passed in full
 DEFAULT_BENCH = "KRE"                   # banks are measured against the regional-bank ETF
 BENCH_BY_GROUP = {"Insurers": "SPY", "Retail": "SPY"}  # insurers and retailers against the broad market (as in signals.py)
 STORM_WINDOW = "landfall to +5 trading days"
+DEFAULT_HORIZON_DAYS = 20               # forecast horizon if the caller does not pass config/signals.yaml agent value
+
+# Research panels the Markets page can draw (web/assets/research.js); the analyst sees the descriptions.
+RESEARCH_PANELS = {
+    "branch_map": "map of Capital One branches and ATMs (Nessie) with live NWS flood-alert polygons",
+    "customer_stress": "SYNTHETIC Capital One customer portfolio: Isaias stress test and loans under live alerts",
+    "flood_map": "Sentinel-1 radar before/after images and detected flood polygons for Hurricane Isaias (Oct 2026)",
+    "alert_exposure": "US banks ranked by deposits in branches under live NWS flood alerts (FDIC Summary of Deposits)",
+    "alerts_map": "map of live NWS flood alerts plus active NHC tropical storms",
+    "parking_lot": "Sentinel-1 radar parking-lot activity index and year-over-year signal, with the tracked stores",
+    "storm_history": "the stock's excess return vs its benchmark after each past hurricane landfall",
+}
+PANELS_BY_SIGNAL = {
+    "branch_network": ("branch_map", "customer_stress", "flood_map", "storm_history"),
+    "flood_deposits": ("alert_exposure", "alerts_map", "flood_map", "storm_history"),
+    "weather_alerts": ("alerts_map", "flood_map", "storm_history"),
+    "parking_lot_sar": ("parking_lot",),
+}
 
 
 def _num(v, nd: int = 2):
@@ -24,6 +45,14 @@ def _num(v, nd: int = 2):
 
 def bench_for(group: str) -> str:
     return BENCH_BY_GROUP.get(group, DEFAULT_BENCH)
+
+
+def research_options(signal: dict | None) -> list[str]:
+    """Panel keys that have data behind them for this signal block (storm history only when there is some)."""
+    if not signal:
+        return []
+    keys = PANELS_BY_SIGNAL.get(signal.get("type"), ())
+    return [k for k in keys if k != "storm_history" or signal.get("storm_history")]
 
 
 def _metric(m: dict) -> dict:
@@ -42,7 +71,7 @@ def _past_storms(rows_all: list[dict], bench: str) -> dict:
     }
 
 
-def bundle(ticker: str, payload: dict, focus: str) -> dict:
+def bundle(ticker: str, payload: dict, focus: str, horizon_days: int = DEFAULT_HORIZON_DAYS) -> dict:
     summ = payload["summary"][ticker]
     bench = bench_for(summ["group"])
     sig = payload.get("signals", {}).get(ticker)
@@ -68,6 +97,8 @@ def bundle(ticker: str, payload: dict, focus: str) -> dict:
         "signal": signal,
         "past_storms": _past_storms(rows_all, bench),
         "data_gaps": gaps,
+        "forecast_horizon_days": horizon_days,
+        "research_options": [{"key": k, "shows": RESEARCH_PANELS[k]} for k in research_options(sig)],
     }
 
 

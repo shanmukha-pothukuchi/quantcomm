@@ -94,3 +94,29 @@ def test_hash_is_stable_and_follows_the_evidence():
     assert h1 != evidence.evidence_hash(bundles, ctx, "v2")  # prompt revisions invalidate cached advice
     p["summary"]["COF"]["last"] = 150.0
     assert h1 != evidence.evidence_hash([evidence.bundle("COF", p, focus="COF")], ctx, "v1")
+
+
+def test_bundle_offers_research_panels_that_fit_the_signal():
+    b = evidence.bundle("COF", _payload(), focus="COF")
+    keys = [o["key"] for o in b["research_options"]]
+    assert keys == ["branch_map", "customer_stress", "flood_map", "storm_history"]
+    assert all(o["shows"] for o in b["research_options"])
+    p = _payload()
+    p["signals"]["COF"] = {**p["signals"]["COF"], "storm_history": []}
+    assert "storm_history" not in [o["key"] for o in evidence.bundle("COF", p, focus="COF")["research_options"]]
+    p["signals"] = {}
+    assert evidence.bundle("COF", p, focus="COF")["research_options"] == []
+
+
+def test_research_options_by_signal_type():
+    hist = [{"storm": "Ian", "year": 2022, "excess_pct": 1.0}]
+    assert evidence.research_options({"type": "parking_lot_sar"}) == ["parking_lot"]
+    assert evidence.research_options({"type": "flood_deposits", "storm_history": hist}) == \
+        ["alert_exposure", "alerts_map", "flood_map", "storm_history"]
+    assert evidence.research_options({"type": "weather_alerts", "storm_history": hist})[0] == "alerts_map"
+    assert evidence.research_options({"type": "benchmark"}) == []
+    assert evidence.research_options(None) == []
+
+
+def test_bundle_asks_for_a_forecast_over_the_configured_horizon():
+    assert evidence.bundle("COF", _payload(), focus="COF", horizon_days=15)["forecast_horizon_days"] == 15

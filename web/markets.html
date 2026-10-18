@@ -7,9 +7,10 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
 <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
-<meta name="description" content="Bank and company stock charts, with an AI agent's read on what to buy, hold or avoid. Capital One first.">
+<meta name="description" content="Bank and company stock charts with AI agents' predicted path, their read on what to buy, hold or avoid, and the research behind each call. Capital One first.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/research.css">
 <style>
 :root {
   --bg: #0c0d0f; --panel: #131417; --panel-2: #1a1c21; --line: #23262c; --line-2: #2d3138;
@@ -67,6 +68,15 @@ header.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; pad
 .ranges button.on { color: var(--ink); border-color: var(--line-2); background: var(--panel-2); }
 .legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin: 6px 0 0; flex-wrap: wrap; }
 .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+.legend i.pred { height: 0; border-top: 2px dashed var(--blue); }
+.legend i.band { height: 8px; border-radius: 2px; background: rgba(75,163,255,.22); }
+.forecast { margin-top: 4px; font-size: 12.5px; color: var(--ink-2); }
+.forecast b { color: var(--blue); font-weight: 650; }
+.forecast .tagp { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--blue);
+  border: 1px solid rgba(75,163,255,.45); background: rgba(75,163,255,.1); border-radius: 5px; padding: 1px 6px; margin-right: 6px; vertical-align: 1px; }
+.research-btn { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; }
+.research-btn svg { width: 16px; height: 16px; }
+.research-note { color: var(--ink-3); font-size: 12px; margin-top: 6px; }
 .chartbox { position: relative; margin-top: 6px; }
 .chartbox svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
 .tip { position: absolute; pointer-events: none; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 9px; font-size: 12px; display: none; white-space: nowrap; }
@@ -140,6 +150,7 @@ footer a { color: var(--ink-2); }
       </div>
       <div class="ranges" id="ranges" role="group" aria-label="Chart range"></div>
     </div>
+    <div class="forecast" id="forecast"></div>
     <div class="legend" id="legend"></div>
     <div class="chartbox" id="chartbox">
       <svg id="chart" role="img" aria-label="Price chart since the chosen start date"></svg>
@@ -156,14 +167,15 @@ footer a { color: var(--ink-2); }
 
 <footer>
   <span>Research prototype for a hackathon. Not financial advice.</span>
-  <a href="/dashboard">Research dashboard</a>
-  <a href="/about">About Quantcomm</a>
+  <span>The dashed blue line is the AI agent's prediction, not market data.</span>
+  <a href="/">About Quantcomm</a>
 </footer>
 </div>
 <datalist id="all-tickers"></datalist>
 
 <script>
 const RANGES = { "1M": 21, "6M": 126, "1Y": 252, "5Y": 1260, "All": Infinity };
+const PRED = { line: "#4ba3ff", band: "rgba(75,163,255,.16)", zone: "rgba(75,163,255,.05)" };
 const S = { list: null, advice: null, sel: null, detail: null, range: "1Y", busy: false };
 const $ = (id) => document.getElementById(id);
 
@@ -271,7 +283,28 @@ function renderCompany() {
       <p class="empty">${failed ? "The analyst for this company failed on the last run: " + esc(failed.error) :
         (S.advice && S.advice.available ? "This company is not in the agents' covered list." : "Run analysis to get the agent's view on this company.")}</p>`;
   }
-  card.innerHTML = agent + evidenceBlock(d);
+  card.innerHTML = agent + researchButton(d) + evidenceBlock(d);
+}
+function researchButton(d) {
+  const an = analysisFor(d.ticker);
+  if (!an || !d.research_options.length) return "";
+  const picked = (an.research || []).filter((k) => d.research_options.includes(k));
+  const n = picked.length || d.research_options.length;
+  const note = picked.length ? `${n} source${n > 1 ? "s" : ""} the analyst relied on` : "every source available for this company";
+  return `<button type="button" class="btn research-btn" id="research-open">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      Show research</button><div class="research-note">${esc(note)}</div>`;
+}
+async function showResearch() {
+  const d = S.detail, an = analysisFor(d.ticker);
+  const picked = ((an && an.research) || []).filter((k) => d.research_options.includes(k));
+  try {
+    const { openResearch } = await import("/assets/research.js");
+    await openResearch({ ticker: d.ticker, name: d.name, keys: picked,
+      chosenBy: picked.length ? "Panels picked by the AI analyst as the data behind its call" : "This analysis predates research picks, so every panel is shown" });
+  } catch (e) {
+    banner("err", `<div class="txt"><h2>Could not open the research</h2><div class="sub">${esc(e.message)}</div></div>`);
+  }
 }
 function evidenceBlock(d) {
   const sig = d.signal;
@@ -326,23 +359,55 @@ function pctSeries(vals) {
   const base = vals.find((v) => v != null);
   return vals.map((v) => (v == null || base == null ? null : (v / base - 1) * 100));
 }
+function addTradingDays(iso, n) {
+  // weekdays only; exchange holidays are not modelled, so the end date is approximate
+  const d = new Date(iso + "T00:00:00Z");
+  for (let k = 0; k < n;) { d.setUTCDate(d.getUTCDate() + 1); const w = d.getUTCDay(); if (w !== 0 && w !== 6) k++; }
+  return d.toISOString().slice(0, 10);
+}
+// The analyst's forecast placed on the chart: anchored at the close it saw, `horizon_days` trading days ahead.
+function forecastFor(d, sl) {
+  const an = analysisFor(d.ticker), f = an && an.forecast;
+  if (!f) return null;
+  const ai = sl.dates.lastIndexOf(f.from_date);
+  if (ai < 0) return { f, outside: true };
+  const base = sl.closes.find((v) => v != null);
+  const toPct = (r) => (f.from_price * (1 + r / 100) / base - 1) * 100;
+  return { f, ai, end: ai + f.horizon_days, endDate: addTradingDays(f.from_date, f.horizon_days),
+           p0: (f.from_price / base - 1) * 100, mid: toPct(f.return_pct), lo: toPct(f.low_pct), hi: toPct(f.high_pct) };
+}
+function renderForecastLine(d, fc) {
+  const el = $("forecast");
+  if (!fc) {  // no analysis: the agent card already says so; an older analysis may predate predictions
+    el.innerHTML = analysisFor(d.ticker) ? `<span class="dim">This analysis has no price prediction. Run analysis for one.</span>` : "";
+    return;
+  }
+  const f = fc.f, px = (r) => fmtPrice(f.from_price * (1 + r / 100));
+  const span = fc.outside ? ` <span class="dim">(made on ${esc(fmtDate(f.from_date))}, before this chart range; pick a longer range to see it)</span>` : "";
+  el.innerHTML = `<span class="tagp">AI prediction</span><b>${fmtPct(f.return_pct)}</b> to ${px(f.return_pct)} by ~${esc(fmtDate(fc.endDate || addTradingDays(f.from_date, f.horizon_days)))}
+    <span class="dim">· likely range ${px(f.low_pct)} to ${px(f.high_pct)} · ${f.horizon_days} trading days from the ${esc(fmtDate(f.from_date))} close</span>${span}`;
+}
 function renderChart() {
   const d = S.detail, box = $("chartbox"), svg = $("chart");
   const sl = slice(d), W = Math.max(280, box.clientWidth), H = 300, M = { l: 46, r: 14, t: 14, b: 28 };
   const co = pctSeries(sl.closes), bm = sl.bench ? pctSeries(sl.bench) : null;
-  const all = [...co, ...(bm || [])].filter((v) => v != null);
+  const fc = forecastFor(d, sl), pred = fc && !fc.outside ? fc : null;
+  const all = [...co, ...(bm || []), ...(pred ? [pred.lo, pred.hi] : [])].filter((v) => v != null);
   const last = [...sl.closes].reverse().find((v) => v != null);
+  const color = d.focus ? "#e9b949" : "#22c38e";
   $("co-name").innerHTML = `${esc(d.name)} <small>${esc(d.ticker)}</small>`;
   const lastPct = co.filter((v) => v != null).pop();
   $("price").innerHTML = `${fmtPrice(last)} <small class="${lastPct >= 0 ? "up" : "down"}">${fmtPct(lastPct)} in ${esc(S.range)}</small>`;
-  $("legend").innerHTML = `<span><i style="background:${d.focus ? "var(--focus)" : "var(--up)"}"></i>${esc(d.ticker)}</span>` +
+  renderForecastLine(d, fc);
+  $("legend").innerHTML = `<span><i style="background:${d.focus ? "var(--focus)" : "var(--up)"}"></i>${esc(d.ticker)} actual</span>` +
+    (pred ? `<span><i class="pred"></i>AI predicted path (not actual)</span><span><i class="band"></i>AI likely range</span>` : "") +
     (bm ? `<span><i style="border-top:1px dashed var(--ink-3);height:0"></i>${esc(d.benchmark.ticker)} benchmark</span>` : "") +
     `<span><i style="background:var(--ink-3)"></i>storm landfall</span>`;
   if (!all.length) { svg.innerHTML = ""; return; }
   const { ticks, step } = niceTicks(Math.min(0, ...all), Math.max(0, ...all));
   const y0 = ticks[0], y1 = ticks[ticks.length - 1] + (ticks.length < 2 ? step : 0);
-  const n = sl.dates.length;
-  const x = (i) => M.l + (n > 1 ? i / (n - 1) : 0) * (W - M.l - M.r);
+  const n = sl.dates.length, nx = Math.max(n, pred ? pred.end + 1 : 0);  // x slots: history + prediction horizon
+  const x = (i) => M.l + (nx > 1 ? i / (nx - 1) : 0) * (W - M.l - M.r);
   const y = (v) => M.t + (1 - (v - y0) / (y1 - y0)) * (H - M.t - M.b);
   const path = (vals) => {
     let out = "", pen = false;
@@ -354,10 +419,12 @@ function renderChart() {
     return `<line x1="${M.l}" x2="${W - M.r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#23262c"/>
       <text x="${M.l - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#686b73">${lbl}</text>`;
   }).join("");
-  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => {
-    const i = Math.round(f * (n - 1));
+  const dateAt = (i) => (i < n ? sl.dates[i] : addTradingDays(sl.dates[n - 1], i - (n - 1)));
+  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((fr) => {
+    const i = Math.round(fr * (n - 1));
     const lbl = new Date(sl.dates[i] + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
-    return `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${f === 0 ? "start" : f === 1 ? "end" : "middle"}" font-size="11" fill="#686b73">${esc(lbl)}</text>`;
+    const anchor = fr === 0 ? "start" : fr === 1 && !pred ? "end" : "middle";
+    return pred && fr === 1 ? "" : `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${anchor}" font-size="11" fill="#686b73">${esc(lbl)}</text>`;
   }).join("");
   const first = sl.dates[0], lastDate = sl.dates[n - 1];
   const events = (d.events || []).filter((e) => e.landfall.slice(0, 10) >= first && e.landfall.slice(0, 10) <= lastDate).map((e) => {
@@ -368,31 +435,56 @@ function renderChart() {
       <text x="${(x(i) + (right ? -4 : 4)).toFixed(1)}" y="${M.t + 11}" text-anchor="${right ? "end" : "start"}" font-size="10" fill="#9a9da5">${esc(e.name)}</text>`;
   }).join("");
   const zero = y0 < 0 && y1 > 0 ? `<line x1="${M.l}" x2="${W - M.r}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#2d3138"/>` : "";
+  let predSvg = "";
+  if (pred) {
+    const xa = x(pred.ai), xe = x(pred.end), xt = x(n - 1), endLbl = new Date(pred.endDate + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+    const labelRight = xe > W - 120;
+    predSvg = `<rect x="${xt.toFixed(1)}" y="${M.t}" width="${Math.max(0, W - M.r - xt).toFixed(1)}" height="${H - M.t - M.b}" fill="${PRED.zone}"/>
+      <line x1="${xt.toFixed(1)}" x2="${xt.toFixed(1)}" y1="${M.t}" y2="${H - M.b}" stroke="${PRED.line}" stroke-opacity=".5"/>
+      <text x="${(xt + 4).toFixed(1)}" y="${H - M.b - 6}" font-size="10" font-weight="700" fill="${PRED.line}" letter-spacing=".06em">PREDICTED</text>
+      <path d="M${xa.toFixed(1)} ${y(pred.p0).toFixed(1)} L${xe.toFixed(1)} ${y(pred.hi).toFixed(1)} L${xe.toFixed(1)} ${y(pred.lo).toFixed(1)} Z" fill="${PRED.band}"/>
+      <path d="M${xa.toFixed(1)} ${y(pred.p0).toFixed(1)} L${xe.toFixed(1)} ${y(pred.mid).toFixed(1)}" stroke="${PRED.line}" stroke-width="2.2" stroke-dasharray="6 5" fill="none"/>
+      <circle cx="${xe.toFixed(1)}" cy="${y(pred.mid).toFixed(1)}" r="4" fill="${PRED.line}" stroke="#0c0d0f" stroke-width="2"/>
+      <text x="${(xe + (labelRight ? -8 : 8)).toFixed(1)}" y="${(y(pred.mid) - 8).toFixed(1)}" text-anchor="${labelRight ? "end" : "start"}" font-size="11" font-weight="650" fill="${PRED.line}">AI: ${esc(fmtPct(pred.f.return_pct))}</text>
+      <text x="${xe.toFixed(1)}" y="${H - 8}" text-anchor="end" font-size="11" fill="${PRED.line}">${esc(endLbl)} (pred.)</text>`;
+  }
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("height", H);
   svg.innerHTML = `${grid}${zero}${events}
     ${bm ? `<path d="${path(bm)}" fill="none" stroke="#686b73" stroke-width="1.5" stroke-dasharray="4 4"/>` : ""}
-    <path d="${path(co)}" fill="none" stroke="${d.focus ? "#e9b949" : "#22c38e"}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${predSvg}
+    <path d="${path(co)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round"/>
     ${xTicks}
     <g id="hover" style="display:none"><line id="hx" y1="${M.t}" y2="${H - M.b}" stroke="#6b7079" stroke-dasharray="3 3"/><circle id="hd" r="4" stroke="#0c0d0f" stroke-width="2"/></g>
     <rect id="hit" x="${M.l}" y="${M.t}" width="${W - M.l - M.r}" height="${H - M.t - M.b}" fill="transparent"/>`;
   const tip = $("tip");
+  const hide = () => { tip.style.display = "none"; $("hover").style.display = "none"; };
   svg.onmousemove = (ev) => {
     const r = svg.getBoundingClientRect();
     const px = ((ev.clientX - r.left) / r.width) * W;
-    const i = Math.max(0, Math.min(n - 1, Math.round(((px - M.l) / (W - M.l - M.r)) * (n - 1))));
-    if (co[i] == null) { tip.style.display = "none"; $("hover").style.display = "none"; return; }
+    const i = Math.max(0, Math.min(nx - 1, Math.round(((px - M.l) / (W - M.l - M.r)) * (nx - 1))));
+    let html, cy, fill;
+    if (pred && i > n - 1) {
+      // linear path from the anchor close to the predicted end, as drawn
+      const t = Math.min(1, (i - pred.ai) / pred.f.horizon_days), lerp = (a, b) => a + (b - a) * t;
+      const f = pred.f, price = (k) => fmtPrice(f.from_price * (1 + lerp(0, f[k]) / 100));
+      cy = y(lerp(pred.p0, pred.mid)); fill = PRED.line;
+      html = `<b>${esc(fmtDate(dateAt(i)))} · AI predicted</b><br>${price("return_pct")} (range ${price("low_pct")} – ${price("high_pct")})`;
+    } else {
+      if (co[i] == null) { hide(); return; }
+      const bmTxt = bm && bm[i] != null ? ` · ${esc(d.benchmark.ticker)} ${fmtPct(bm[i])}` : "";
+      cy = y(co[i]); fill = color;
+      html = `<b>${esc(fmtDate(sl.dates[i]))}</b><br>${fmtPrice(sl.closes[i])} (${fmtPct(co[i])})${bmTxt}`;
+    }
     $("hover").style.display = "";
     $("hx").setAttribute("x1", x(i)); $("hx").setAttribute("x2", x(i));
-    $("hd").setAttribute("cx", x(i)); $("hd").setAttribute("cy", y(co[i]));
-    $("hd").setAttribute("fill", d.focus ? "#e9b949" : "#22c38e");
-    const bmTxt = bm && bm[i] != null ? ` · ${esc(d.benchmark.ticker)} ${fmtPct(bm[i])}` : "";
-    tip.innerHTML = `<b>${esc(fmtDate(sl.dates[i]))}</b><br>${fmtPrice(sl.closes[i])} (${fmtPct(co[i])})${bmTxt}`;
+    $("hd").setAttribute("cx", x(i)); $("hd").setAttribute("cy", cy); $("hd").setAttribute("fill", fill);
+    tip.innerHTML = html;
     tip.style.display = "block";
-    tip.style.left = Math.min(W - 180, Math.max(0, (x(i) / W) * r.width - 60)) + "px";
+    tip.style.left = Math.max(0, Math.min(r.width - 230, (x(i) / W) * r.width - 60)) + "px";
     tip.style.top = "0px";
   };
-  svg.onmouseleave = () => { tip.style.display = "none"; $("hover").style.display = "none"; };
+  svg.onmouseleave = hide;
 }
 
 // -------------------------------------------------------------- actions --
@@ -425,10 +517,12 @@ async function runAnalysis() {
     $("run").textContent = "Run analysis";
   }
   renderAdvice();
+  renderChart();
   renderCompany();
 }
 
 document.addEventListener("click", (ev) => {
+  if (ev.target.closest("#research-open")) { showResearch(); return; }
   const chip = ev.target.closest("[data-t]");
   if (chip && chip.classList.contains("chip")) select(chip.dataset.t);
   if (chip && chip.classList.contains("pick")) select(chip.dataset.t);

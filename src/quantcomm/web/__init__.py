@@ -1,1 +1,1 @@
-"""Quantcomm web app (FastAPI): landing page, dashboard and stocks page. See server.py."""
+"""Quantcomm web app (FastAPI): landing page and the Markets app. See server.py."""

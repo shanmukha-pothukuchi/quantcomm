@@ -11,7 +11,7 @@ DEFAULT_PORT = 8000
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Serve the Quantcomm landing page, dashboard and stocks page.")
+    ap = argparse.ArgumentParser(description="Serve the Quantcomm landing page and Markets app.")
     ap.add_argument("--host", default=DEFAULT_HOST)
     ap.add_argument("--port", type=int, default=DEFAULT_PORT)
     ap.add_argument("--reload", action="store_true", help="restart on code changes (development)")

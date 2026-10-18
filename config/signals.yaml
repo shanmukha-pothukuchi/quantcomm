@@ -50,3 +50,4 @@ agent:
   focus: COF
   universe: [COF, WMT, JPM, BAC, WFC, C, USB, PNC, TFC, ALL, TRV, PGR, CB, KRE]
   max_workers: 4            # parallel analyst calls to the LLM endpoint
+  forecast_horizon_days: 20 # each analyst forecasts the return over this many trading days (drawn on the chart)

@@ -19,6 +19,7 @@ _AGENT_CFG = load_yaml("signals.yaml")["agent"]
 FOCUS: str = _AGENT_CFG["focus"]
 CONFIG_UNIVERSE: list[str] = list(_AGENT_CFG["universe"])
 MAX_WORKERS: int = int(_AGENT_CFG["max_workers"])
+HORIZON_DAYS: int = int(_AGENT_CFG["forecast_horizon_days"])
 _run_lock = threading.Lock()
 
 
@@ -51,12 +52,13 @@ def ticker_view(payload: dict, ticker: str) -> dict:
         "benchmark": {"ticker": bench, "closes": payload["series"].get(bench)},
         "events": payload["events"],
         "signal": payload["signals"].get(ticker),
+        "research_options": evidence.research_options(payload["signals"].get(ticker)),
     }
 
 
 def _evidence(payload: dict) -> tuple[list[dict], dict]:
     live = store.load_json(store.data_dir() / "live" / "live_summary.json")
-    bundles = [evidence.bundle(t, payload, FOCUS) for t in covered(payload)]
+    bundles = [evidence.bundle(t, payload, FOCUS, HORIZON_DAYS) for t in covered(payload)]
     return bundles, evidence.context(payload, live, FOCUS)
 
 

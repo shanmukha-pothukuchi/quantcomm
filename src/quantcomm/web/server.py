@@ -1,17 +1,16 @@
-"""Quantcomm web app: landing page, dashboard and stocks page over one small JSON API.
+"""Quantcomm web app: landing page and the Markets app over one small JSON API.
 
 Pages
-  /, /stocks   Markets app: price charts, the agents' analysis, Capital One first (web/markets.html)
-  /about       project landing page (web/index.html)
-  /dashboard   research dashboard: storm case study, live, bank exposure, market test, validation
+  /            project landing page (web/index.html); every page's logo links here
+  /stocks      Markets app: price charts with the agents' predicted line, their analysis and research (web/markets.html)
 
 API (all responses: {"success": bool, "data": ..., "error": str | null})
   /api/markets, /api/markets/{ticker}   stock list; one company's chart, signal and past storms
   /api/advice                           cached agent analysis + whether it is stale
   /api/advice/run                       POST: run the agents now (needs LLM_* in .env)
-  /api/storms, /api/storms/{key}, /api/storms/{key}/layers/{name}
-  /api/live, /api/live/alerts
-  /api/banks, /api/market, /api/validation, /api/methodology
+  /api/research/{ticker}?panels=a,b     research panels behind an analysis ("Show research")
+  /api/storms/{key}/layers/{name}       flood polygons, SAR coverage, NHC track (GeoJSON)
+  /api/live/alerts                      live NWS flood-alert polygons (GeoJSON)
 """
 from __future__ import annotations
 
@@ -77,20 +76,12 @@ def create_app() -> FastAPI:
         return FileResponse(WEB / "assets" / "brand" / "favicon.ico", media_type="image/x-icon")
 
     @app.get("/", include_in_schema=False)
-    def markets_app():
-        return _page("markets.html")
-
-    @app.get("/stocks", include_in_schema=False)
-    def stocks_alias():
-        return _page("markets.html")
-
-    @app.get("/about", include_in_schema=False)
     def landing():
         return _page("index.html")
 
-    @app.get("/dashboard", include_in_schema=False)
-    def dashboard():
-        return _page("dashboard.html")
+    @app.get("/stocks", include_in_schema=False)
+    def markets_app():
+        return _page("markets.html")
 
     @app.get("/media/{storm}/{name}", include_in_schema=False)
     def media(storm: str, name: str):
@@ -128,41 +119,18 @@ def create_app() -> FastAPI:
             log.exception("agent run failed")
             raise HTTPException(500, f"Agent run failed unexpectedly ({type(exc).__name__}); see the server log.") from exc
 
-    @app.get("/api/storms")
-    def api_storms():
-        return _guard(storms.storm_index, "storm list")
-
-    @app.get("/api/storms/{key}")
-    def api_storm(key: str):
-        return _guard(lambda: storms.storm_case(key), "storm")
+    @app.get("/api/research/{ticker}")
+    def api_research(ticker: str, panels: str | None = None):
+        keys = [k for k in (panels or "").split(",") if k]
+        return _guard(lambda: research.ticker_research(stocks.payload(), ticker, keys), "research")
 
     @app.get("/api/storms/{key}/layers/{layer}")
     def api_layer(key: str, layer: str):
         return _guard(lambda: storms.storm_layer(key, layer), "layer")
 
-    @app.get("/api/live")
-    def api_live():
-        return _guard(live.live_summary, "live summary")
-
     @app.get("/api/live/alerts")
     def api_alerts():
         return _guard(live.live_alerts, "alert polygons")
-
-    @app.get("/api/banks")
-    def api_banks(storm: str | None = None, definition: str | None = None):
-        return _guard(lambda: research.bank_exposure(storm, definition), "bank exposure")
-
-    @app.get("/api/market")
-    def api_market():
-        return _guard(research.market, "market test")
-
-    @app.get("/api/validation")
-    def api_validation():
-        return _guard(research.validation, "validation")
-
-    @app.get("/api/methodology")
-    def api_methodology():
-        return _guard(research.methodology, "methodology")
 
     return app
 

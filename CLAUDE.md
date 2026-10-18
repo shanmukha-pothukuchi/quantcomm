@@ -122,7 +122,7 @@ For historical storms, aggregate the flood mask to ZIP code or census tract (% a
 
 ### Milestone 6 — Demo polish
 
-Web app (FastAPI + static pages: `/` landing, `/dashboard`, `/stocks`; replaced the original Streamlit app 2026-10-18) with tabs:
+Web app (FastAPI + static pages: `/` landing, `/stocks` Markets; replaced the original Streamlit app 2026-10-18). **2026-10-18: the `/dashboard` page was removed** — the items below now appear only as "Show research" popups behind each AI analysis on `/stocks`, when the analyst picks them. Original tab list:
 - **Isaias case study** — before/after slider, flood map, Capital One branches/ATMs, stress test results.
 - **Live** — current alerts and exposure.
 - **Bank exposure** — sortable table of every public bank's exposure by storm.

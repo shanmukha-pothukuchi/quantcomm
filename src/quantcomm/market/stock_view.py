@@ -1,4 +1,4 @@
-"""Payload for the dashboard's Stocks page: real yfinance closes + per-ticker summaries + flood context.
+"""Payload for the Markets page: real yfinance closes + per-ticker summaries + flood context.
 
 Everything here is derived from cached pipeline outputs; nothing is invented. Tickers whose
 prices are missing simply don't appear. Flood-alert exposure is joined to tickers with the same
