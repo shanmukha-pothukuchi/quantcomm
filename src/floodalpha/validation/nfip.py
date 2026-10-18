@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 import logging
+import time
+from contextlib import ExitStack
 from pathlib import Path
 
 import geopandas as gpd
@@ -19,6 +21,8 @@ import pandas as pd
 import rasterio
 import requests
 from rasterio import features
+from rasterio.io import MemoryFile
+from rasterio.merge import merge
 from scipy import ndimage, stats
 
 from floodalpha import config
@@ -51,21 +55,20 @@ def fetch_claims(storm_key: str, force: bool = False) -> pd.DataFrame:
         t1 = (lf + pd.Timedelta(days=DAYS_AFTER)).strftime("%Y-%m-%dT23:59:59.000Z")
         states = " or ".join(f"state eq '{s}'" for s in st["aoi_states"])
         flt = f"dateOfLoss ge '{t0}' and dateOfLoss le '{t1}' and ({states})"
-        rows, skip, total = [], 0, None
+        # No $inlinecount: on large windows (Harvey) FEMA's count times out at its 60 s gateway and returns 503,
+        # even for a $top=1 count-only query (verified 2026-10-18). Page on a stable $orderby until a short page.
+        rows, skip = [], 0
         while True:
-            params = {"$filter": flt, "$top": PAGE, "$skip": skip, "$inlinecount": "allpages", "$orderby": "id"}
-            r = requests.get(NFIP_URL, params=params, timeout=300)
-            r.raise_for_status()
-            d = r.json()
-            if total is None:
-                total = d["metadata"]["count"]
-            page = d["NfipClaims"]
+            params = {"$filter": flt, "$top": PAGE, "$skip": skip, "$orderby": "id"}
+            page = _get_page(params)
             rows += page
             skip += len(page)
-            if not page or skip >= total:
+            if len(page) < PAGE:
                 break
-        if total is not None and len(rows) != total:
-            raise RuntimeError(f"{storm_key}: NFIP paging returned {len(rows)} rows, metadata count {total}")
+        n_unique = len({r["id"] for r in rows})
+        if n_unique != len(rows):
+            raise RuntimeError(f"{storm_key}: NFIP paging returned {len(rows)} rows but {n_unique} unique ids")
+        total = len(rows)
         # independent count by FEMA's own event label, for the report
         ev = _flood_event_count(st["name"])
         RAW.mkdir(parents=True, exist_ok=True)
@@ -76,6 +79,19 @@ def fetch_claims(storm_key: str, force: bool = False) -> pd.DataFrame:
     df["paid"] = df[["netBuildingPaymentAmount", "netContentsPaymentAmount"]].apply(pd.to_numeric, errors="coerce").fillna(0).sum(axis=1)
     df["censusGeoid"] = df["censusGeoid"].astype("string")
     return df
+
+
+def _get_page(params: dict, attempts: int = 4) -> list[dict]:
+    """One NfipClaims page; retries 5xx (FEMA's gateway returns transient 503s) with backoff, raises otherwise."""
+    for i in range(attempts):
+        r = requests.get(NFIP_URL, params=params, timeout=300)
+        if r.status_code < 500:
+            r.raise_for_status()
+            return r.json()["NfipClaims"]
+        log.warning("NfipClaims HTTP %s (attempt %d/%d, skip=%s)", r.status_code, i + 1, attempts, params.get("$skip"))
+        time.sleep(10 * (i + 1))
+    r.raise_for_status()
+    return []
 
 
 def _flood_event_count(name: str) -> dict:
@@ -117,55 +133,75 @@ def housing_units() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- re-thresholding
-def rethreshold(storm_key: str, diff_db: float, post_db_max: float, min_cluster_px: int) -> tuple[np.ndarray, dict]:
-    """Recompute the flood mask from the saved per-frame dB rasters and eligibility masks, on the pipeline's grid.
+def _frame_mask(frames: Path, tag: str, diff_db: float, post_db_max: float, min_cluster_px: int) -> tuple[np.ndarray, dict] | None:
+    """One post-storm frame's flood mask on its own grid, as mpc_backend.process_frame writes it.
 
-    Works per post-storm frame (data/raw/<storm>/s1/frames/{post,pre,eligible}_<tag>.tif) and takes the max over
-    frames, exactly like the pipeline, because the storm-level dB mosaics keep only one pass where orbits overlap.
+    The saved frame mask gives the footprint (NODATA where the pipeline masked permanent water, no DEM or no data;
+    that footprint does not depend on the thresholds). The flood rule and the cluster filter are re-applied to the
+    saved dB rasters. Returns None if the frame's rasters are not on disk.
+    """
+    paths = {k: frames / f"{k}_{tag}.tif" for k in ("post", "pre", "eligible", "mask")}
+    if not all(pp.exists() for pp in paths.values()):
+        return None
+    with rasterio.open(paths["post"]) as ds:
+        post, prof = ds.read(1), ds.profile
+    with rasterio.open(paths["pre"]) as ds:
+        pre = ds.read(1)
+    with rasterio.open(paths["eligible"]) as ds:
+        land = ds.read(1) == 1
+    with rasterio.open(paths["mask"]) as ds:
+        footprint = ds.read(1) != NODATA
+    cand = land & ~np.isnan(post) & ~np.isnan(pre) & ((post - pre) < diff_db) & (post < post_db_max)
+    lab, n = ndimage.label(cand)
+    if n:
+        sizes = np.bincount(lab.ravel())
+        small = sizes < min_cluster_px
+        small[0] = False
+        cand[small[lab]] = False
+    return np.where(footprint, cand.astype("uint8"), NODATA).astype("uint8"), prof
+
+
+def _memory_raster(stack: ExitStack, arr: np.ndarray, prof: dict):
+    """Open an in-memory single-band uint8 raster (for rasterio.merge) that lives until the ExitStack closes."""
+    mem = stack.enter_context(MemoryFile())
+    with mem.open(driver="GTiff", height=arr.shape[0], width=arr.shape[1], count=1, dtype="uint8",
+                  crs=prof["crs"], transform=prof["transform"], nodata=NODATA) as w:
+        w.write(arr.astype("uint8"), 1)
+    return stack.enter_context(mem.open())
+
+
+def rethreshold(storm_key: str, diff_db: float, post_db_max: float, min_cluster_px: int) -> tuple[np.ndarray, dict]:
+    """Recompute the flood mask from the saved per-frame dB rasters and eligibility masks.
+
+    Merges in the pipeline's order, so the result lands on the same pixels: frames are merged within each pass,
+    then the passes are merged (max). Merging all frames in one step rounds sub-pixel frame offsets differently
+    and moves flood edges by a pixel.
     Returns (mask uint8: 1 flood / 0 dry / 255 nodata, raster profile).
     """
-    from rasterio.warp import Resampling, reproject
-
     d = config.storm_dir(storm_key)
     meta = json.loads((d / "flood_meta.json").read_text())
     with rasterio.open(d / "flood_mask.tif") as ds:
         profile = ds.profile
     frames = config.storm_dir(storm_key, "raw") / "s1" / "frames"
-    tags = [sid.split("_")[4] for sid in meta["post_scene_ids"]]
-    flood = np.zeros((profile["height"], profile["width"]), dtype="uint8")
-    valid_any = np.zeros_like(flood, dtype=bool)
-    n_frames = 0
-    for tag in tags:
-        fp, fq, fe = frames / f"post_{tag}.tif", frames / f"pre_{tag}.tif", frames / f"eligible_{tag}.tif"
-        if not (fp.exists() and fq.exists() and fe.exists()):
-            log.warning("%s: per-frame rasters for %s missing — skipped", storm_key, tag)
-            continue
-        with rasterio.open(fp) as ds:
-            post = ds.read(1); src_tr, src_crs = ds.transform, ds.crs
-        with rasterio.open(fq) as ds:
-            pre = ds.read(1)
-        with rasterio.open(fe) as ds:
-            elig = ds.read(1)
-        valid = ~np.isnan(post) & ~np.isnan(pre) & (elig == 1)
-        cand = valid & ((post - pre) < diff_db) & (post < post_db_max)
-        lab, n = ndimage.label(cand)
-        if n:
-            sizes = np.bincount(lab.ravel())
-            small = sizes < min_cluster_px
-            small[0] = False
-            cand[small[lab]] = False
-        src = np.where(valid, cand.astype("uint8"), NODATA).astype("uint8")
-        dst = np.full(flood.shape, NODATA, dtype="uint8")
-        reproject(src, dst, src_transform=src_tr, src_crs=src_crs, src_nodata=NODATA, dst_transform=profile["transform"],
-                  dst_crs=profile["crs"], dst_nodata=NODATA, resampling=Resampling.nearest)
-        v = dst != NODATA
-        flood[v] = np.maximum(flood[v], dst[v])
-        valid_any |= v
-        n_frames += 1
-    if n_frames == 0:
-        raise RuntimeError(f"{storm_key}: no per-frame rasters found under {frames}")
-    mask = np.where(valid_any, flood, NODATA).astype("uint8")
-    return mask, profile
+    with ExitStack() as stack:
+        pass_srcs = []
+        for ps in meta["passes"]:
+            frame_srcs = []
+            for sid in ps["post_scene_ids"]:
+                tag = sid.split("_")[4]
+                res = _frame_mask(frames, tag, diff_db, post_db_max, min_cluster_px)
+                if res is None:
+                    log.warning("%s: per-frame rasters for %s missing — skipped", storm_key, tag)
+                    continue
+                frame_srcs.append(_memory_raster(stack, *res))
+            if frame_srcs:
+                arr, tr = merge(frame_srcs, nodata=NODATA, method="max")
+                pass_srcs.append(_memory_raster(stack, arr[0], {"crs": profile["crs"], "transform": tr}))
+        if not pass_srcs:
+            raise RuntimeError(f"{storm_key}: no per-frame rasters found under {frames}")
+        merged, tr = merge(pass_srcs, nodata=NODATA, method="max")
+    mask = merged[0].astype("uint8")
+    return mask, {**profile, "height": mask.shape[0], "width": mask.shape[1], "transform": tr}
 
 
 def _match(ds: rasterio.DatasetReader, profile: dict) -> np.ndarray:

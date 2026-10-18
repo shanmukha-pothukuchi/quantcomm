@@ -60,8 +60,8 @@ def test_tract_pct_from_mask_zonal_stats():
 
 @pytest.mark.skipif(not list((config.storm_dir("michael", "raw") / "s1" / "frames").glob("eligible_*.tif")), reason="michael run not available")
 def test_rethreshold_matches_pipeline_mask_for_michael():
-    """Re-thresholding the saved mosaics at the default thresholds must reproduce the pipeline's flood extent
-    (small differences allowed: the pipeline cluster-filters per frame before mosaicking)."""
+    """Re-thresholding the saved per-frame rasters at the default thresholds must reproduce the pipeline's
+    flood_mask.tif pixel for pixel (same merge order, same footprint)."""
     import rasterio
 
     meta = json.loads((config.storm_dir("michael") / "flood_meta.json").read_text())
@@ -73,7 +73,7 @@ def test_rethreshold_matches_pipeline_mask_for_michael():
     a, b = (mask == 1), (ref == 1)
     inter, union = (a & b).sum(), (a | b).sum()
     assert union > 0
-    assert inter / union > 0.8, f"IoU {inter / union:.2f} between re-threshold and pipeline mask"
+    assert inter / union > 0.999, f"IoU {inter / union:.4f} between re-threshold and pipeline mask"
     # the re-threshold must (almost) never flag pixels the pipeline deemed ineligible/nodata; a handful of
     # edge pixels differ because rasterio.merge snaps to the first frame's grid while reproject uses the mosaic grid
     assert (a & (ref == nfip.NODATA)).sum() < 0.02 * a.sum()
