@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Hit every external data source FloodAlpha depends on and report PASS / FAIL / NEEDS_KEY.
+"""Hit every external data source Quantcomm depends on and report PASS / FAIL / NEEDS_KEY.
 
 Run:  .venv/bin/python scripts/verify_sources.py [--quick]
 
@@ -26,9 +26,9 @@ import requests
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from floodalpha.config import env, storm  # noqa: E402
+from quantcomm.config import env, storm  # noqa: E402
 
-UA = {"User-Agent": "floodalpha-verify (hackathon project)"}
+UA = {"User-Agent": "quantcomm-verify (hackathon project)"}
 TIMEOUT = 45
 AOI = storm("isaias")["aoi_bbox"]  # [min_lon, min_lat, max_lon, max_lat]
 

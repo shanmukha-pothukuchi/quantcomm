@@ -14,7 +14,7 @@ const PIPELINE = ` Sentinel-1 RTC COGs (Planetary Computer) ─┐
  OpenFEMA NFIP claims v3 ─────────────────────┤ validation/nfip.py                  claims vs flood %, threshold tuning
  api.weather.gov alerts · NHC CurrentStorms ──┘ live/alerts.py, live/exposure.py    pre-event exposure, next pass
                                               ▼
-                              floodalpha.web (this site: /, /dashboard, /stocks)`;
+                              quantcomm.web (this site: /, /dashboard, /stocks)`;
 
 function markdown(md) {
   const div = h("div.prose");
@@ -35,7 +35,7 @@ export async function render() {
       h("p", "Verify every source first: ", h("code", ".venv/bin/python scripts/verify_sources.py"),
         ". Then ", h("code", "scripts/run_all.py"), " → ", h("code", "run_banks.py"), " → ", h("code", "run_market.py"), " → ",
         h("code", "run_validation.py"), " → ", h("code", "run_live.py"), ". Raw pulls are cached under ", h("code", "data/raw/"),
-        "; outputs under ", h("code", "data/processed/"), ". Serve this site with ", h("code", ".venv/bin/python -m floodalpha.web"), "."),
+        "; outputs under ", h("code", "data/processed/"), ". Serve this site with ", h("code", ".venv/bin/python -m quantcomm.web"), "."),
       d.storms_done.length ? h("p.muted", `Storms with a finished flood map right now: ${d.storms_done.join(", ")}.`) : null),
     section("Assumptions",
       d.assumptions_md ? markdown(d.assumptions_md) : note("info", "ASSUMPTIONS.md is missing."),

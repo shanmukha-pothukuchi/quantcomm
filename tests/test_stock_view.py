@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodalpha.market import stock_view as sv
+from quantcomm.market import stock_view as sv
 
 IDX = pd.bdate_range("2025-01-01", periods=300)
 

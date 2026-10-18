@@ -7,7 +7,7 @@ from __future__ import annotations
 import argparse
 import logging
 
-from floodalpha.retail import osm, parking_sar
+from quantcomm.retail import osm, parking_sar
 
 
 def main() -> None:

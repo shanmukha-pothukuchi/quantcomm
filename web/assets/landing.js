@@ -1,4 +1,4 @@
-// FloodAlpha landing page behaviour: hero bars, storm metric toggle, scroll reveal (mobile nav: nav.js).
+// Quantcomm landing page behaviour: hero bars, storm metric toggle, scroll reveal (mobile nav: nav.js).
 // Storm numbers are copied from README.md "Results" (generated 2026-10-17 21:55 UTC from data/processed/).
 (() => {
   "use strict";

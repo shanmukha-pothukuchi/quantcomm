@@ -13,8 +13,8 @@ import pytest
 from fastapi.testclient import TestClient
 from shapely.geometry import Point, box
 
-from floodalpha.config import ROOT
-from floodalpha.web import server, stocks, store
+from quantcomm.config import ROOT
+from quantcomm.web import server, stocks, store
 
 STORM = "isaias"
 EVENT = "2026-10-11T05:38:28+00:00"

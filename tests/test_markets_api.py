@@ -5,9 +5,9 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from floodalpha.agent import advisor
-from floodalpha.agent.llm import LLMError
-from floodalpha.web import markets, server, stocks
+from quantcomm.agent import advisor
+from quantcomm.agent.llm import LLMError
+from quantcomm.web import markets, server, stocks
 
 
 def _payload() -> dict:
@@ -121,4 +121,4 @@ def test_pages_route_to_the_markets_app(api):
     for url in ("/", "/stocks"):
         r = api.get(url)
         assert r.status_code == 200 and "Capital One" in r.text and 'id="app"' in r.text
-    assert "FloodAlpha" in api.get("/about").text
+    assert "Quantcomm" in api.get("/about").text

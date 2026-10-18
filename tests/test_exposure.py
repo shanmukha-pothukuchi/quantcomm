@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from shapely.geometry import Point, box
 
-from floodalpha.exposure import point_exposure, tract_flood
+from quantcomm.exposure import point_exposure, tract_flood
 
 CRS = "EPSG:5070"
 AOI = [-87.0, 30.0, -86.0, 31.0]

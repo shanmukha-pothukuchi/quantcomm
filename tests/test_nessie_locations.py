@@ -3,8 +3,8 @@ import json
 import pandas as pd
 import pytest
 
-from floodalpha import config
-from floodalpha.nessie.client import build_locations
+from quantcomm import config
+from quantcomm.nessie.client import build_locations
 
 
 @pytest.fixture(scope="module")

@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 from shapely.geometry import Point, box
 
-from floodalpha.live import alerts as A
-from floodalpha.live import exposure as E
+from quantcomm.live import alerts as A
+from quantcomm.live import exposure as E
 
 
 def test_alerts_gdf_resolves_zone_geometry(tmp_path, monkeypatch):

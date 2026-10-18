@@ -1,6 +1,6 @@
 import pytest
 
-from floodalpha.census.acs import load_tracts
+from quantcomm.census.acs import load_tracts
 
 
 @pytest.fixture(scope="module")

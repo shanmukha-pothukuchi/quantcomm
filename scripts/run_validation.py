@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from floodalpha.validation.nfip import run_validation  # noqa: E402
+from quantcomm.validation.nfip import run_validation  # noqa: E402
 
 
 def main() -> None:

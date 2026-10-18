@@ -41,7 +41,7 @@ function route() {
     a.setAttribute("aria-selected", String(on));
     if (on) a.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
-  document.title = `${tab.label} · FloodAlpha`;
+  document.title = `${tab.label} · Quantcomm`;
   const id = ++renderId;
   const state = {
     ...params,

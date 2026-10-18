@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodalpha.retail import activity, osm, parking_sar
+from quantcomm.retail import activity, osm, parking_sar
 
 
 def _readings(n_days=120, stores=("a", "b", "c"), holiday_boost=0.0, seed=0):

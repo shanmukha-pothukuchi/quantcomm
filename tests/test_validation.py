@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodalpha import config
-from floodalpha.validation import nfip
+from quantcomm import config
+from quantcomm.validation import nfip
 
 
 def test_claims_by_tract_uses_first_11_digits_of_block_group_geoid():

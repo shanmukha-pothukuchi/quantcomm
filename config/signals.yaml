@@ -43,7 +43,7 @@ parking_sar:
   significance: 0.10                 # overlap-adjusted p below this before the page says anything but "no edge"
   min_scenes_per_window: 4
 
-# Agent analysis on the Markets page (src/floodalpha/agent). One analyst per covered company reads that company's
+# Agent analysis on the Markets page (src/quantcomm/agent). One analyst per covered company reads that company's
 # evidence bundle (price trend, its own data-source signal, past storms); then one portfolio manager ranks them.
 # The focus company is the reason for the research and is always shown first.
 agent:

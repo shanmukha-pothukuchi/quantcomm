@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from floodalpha.agent.llm import LLMError
-from floodalpha.web import markets, stocks
+from quantcomm.agent.llm import LLMError
+from quantcomm.web import markets, stocks
 
 
 def _print_summary(advice: dict) -> None:

@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "floodalpha-web",
+      "name": "quantcomm-web",
       "runtimeExecutable": ".venv/bin/python",
       "runtimeArgs": [
         "-m",
-        "floodalpha.web",
+        "quantcomm.web",
         "--port",
         "8000",
         "--reload"

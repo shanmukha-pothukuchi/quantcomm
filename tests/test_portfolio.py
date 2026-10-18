@@ -3,9 +3,9 @@ import pandas as pd
 import pytest
 from shapely.geometry import Point
 
-from floodalpha import config
-from floodalpha.census.acs import load_tracts
-from floodalpha.nessie.portfolio import fema_declared_counties, generate_portfolio
+from quantcomm import config
+from quantcomm.census.acs import load_tracts
+from quantcomm.nessie.portfolio import fema_declared_counties, generate_portfolio
 
 
 @pytest.fixture(scope="module")

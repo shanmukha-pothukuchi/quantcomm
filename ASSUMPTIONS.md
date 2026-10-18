@@ -1,4 +1,4 @@
-# FloodAlpha — Assumptions log
+# Quantcomm — Assumptions log
 
 Every modeling choice, with a one-line justification. Parameters live in `config/model.yaml`.
 
@@ -115,7 +115,7 @@ Capital One branch coordinates: Nessie `/branches` records carry street addresse
 | Backtest | Enter at the first close ≥ acquisition + 3 days, hold 63 trading days, excess vs SPY; Spearman rank correlation with p-value on span ÷ horizon independent windows | 3-day lag covers MPC publication delay (no lookahead). Readings 12 days apart with 63-day holds overlap heavily, so the naive N would overstate significance. |
 | Verdict | "lean long/short" only if the index passes the sanity check AND the overlap-adjusted p < 0.10 with positive correlation; otherwise "unvalidated" / "no edge" | A weak or unvalidated signal should say so rather than nudge a trade. Not investment advice. |
 
-## Agent analysis (Markets page, `src/floodalpha/agent`, `config/signals.yaml` › `agent`)
+## Agent analysis (Markets page, `src/quantcomm/agent`, `config/signals.yaml` › `agent`)
 
 LLM: any OpenAI-compatible endpoint set in `.env` (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`). The current setting is the NRP Nautilus endpoint serving `qwen3`. Its reasoning output (`<think>` blocks) is stripped before the JSON is parsed.
 

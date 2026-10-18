@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from floodalpha.agent.llm import LLMClient, LLMError, extract_json, strip_reasoning
+from quantcomm.agent.llm import LLMClient, LLMError, extract_json, strip_reasoning
 
 SECRET = "sk-test-SECRET-123"
 
@@ -84,7 +84,7 @@ def test_non_json_reply_is_an_error_not_a_guess():
 def test_from_env_requires_all_three_settings(monkeypatch):
     for name in ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr("floodalpha.config.load_dotenv", lambda *a, **k: None)
+    monkeypatch.setattr("quantcomm.config.load_dotenv", lambda *a, **k: None)
     with pytest.raises(LLMError, match="LLM_BASE_URL"):
         LLMClient.from_env()
     monkeypatch.setenv("LLM_BASE_URL", "https://llm.example/v1")

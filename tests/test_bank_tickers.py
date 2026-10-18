@@ -4,8 +4,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from floodalpha import config
-from floodalpha.banks import tickers
+from quantcomm import config
+from quantcomm.banks import tickers
 
 SOD24 = config.DATA_RAW / "fdic" / "sod_2024.parquet"
 PRICES = config.DATA_RAW / "market" / "prices.parquet"

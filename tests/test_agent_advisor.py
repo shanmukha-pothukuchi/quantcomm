@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from floodalpha.agent import advisor
-from floodalpha.agent.llm import LLMError
+from quantcomm.agent import advisor
+from quantcomm.agent.llm import LLMError
 
 UNIVERSE = ["COF", "WMT", "JPM"]
 

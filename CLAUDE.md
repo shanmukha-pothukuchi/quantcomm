@@ -1,4 +1,4 @@
-# FloodAlpha — Claude Code Build Prompt
+# Quantcomm — Claude Code Build Prompt
 
 > Paste this whole file into Claude Code at the start of the project (or save it as `CLAUDE.md` in the repo root so every teammate's session shares it). Then say: **"Read CLAUDE.md, verify the data sources, and build Milestone 1."**
 
@@ -6,7 +6,7 @@
 
 ## Mission
 
-Build **FloodAlpha**: a system that uses free satellite radar (Sentinel-1 SAR) to map flooding after US storms within days, measures how exposed each US bank is to the flooded area, stress-tests a simulated Capital One customer portfolio through the Capital One Nessie API, and tests whether the stock market underprices that exposure.
+Build **Quantcomm**: a system that uses free satellite radar (Sentinel-1 SAR) to map flooding after US storms within days, measures how exposed each US bank is to the flooded area, stress-tests a simulated Capital One customer portfolio through the Capital One Nessie API, and tests whether the stock market underprices that exposure.
 
 **Flagship case study: Hurricane Isaias (2026).** Isaias made landfall near Destin, Florida on the night of Friday, October 9, 2026 as a Category 2 hurricane (briefly Cat 3 beforehand), then weakened to post-tropical over Alabama. Storm surge plus river and flash flooding hit the Florida Panhandle, southern Alabama, and southwest Georgia.
 
@@ -32,11 +32,11 @@ The pitch: *"Banks don't know their flood exposure for weeks after a storm. Free
 ## Architecture
 
 ```
-floodalpha/
+quantcomm/
   config/
     storms.yaml          # storm list: name, landfall date, AOI bbox, notes
     model.yaml           # thresholds, PD/LGD params, event windows
-  src/floodalpha/
+  src/quantcomm/
     flood/               # Sentinel-1 change detection in Earth Engine
     banks/               # FDIC branches + deposits, ticker mapping
     nessie/              # Nessie client, synthetic portfolio generation, stress test
@@ -45,7 +45,7 @@ floodalpha/
     market/              # prices, event study, long-short backtest
     live/                # NHC / NWS alert ingestion for active events
     exposure.py          # flood mask x branches -> bank exposure scores
-  web/                   # web app pages + assets (served by src/floodalpha/web, FastAPI)
+  web/                   # web app pages + assets (served by src/quantcomm/web, FastAPI)
   scripts/               # verify_sources.py, run_storm.py, run_all.py
   tests/
   data/{raw,processed}/
@@ -136,7 +136,7 @@ Also write a 1-page `README.md` with the pitch, architecture diagram, how to run
 
 ## Team parallelization
 
-After Milestone 1, these streams can run in parallel sessions/worktrees with clear interfaces (Parquet schemas defined up front in `src/floodalpha/schemas.py`):
+After Milestone 1, these streams can run in parallel sessions/worktrees with clear interfaces (Parquet schemas defined up front in `src/quantcomm/schemas.py`):
 
 - **Flood** — Earth Engine pipeline, multi-storm runs, validation tuning.
 - **Banks + market** — FDIC data, ticker mapping, event study, backtest.

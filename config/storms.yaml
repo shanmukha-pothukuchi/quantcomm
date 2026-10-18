@@ -1,7 +1,7 @@
 # Storm registry. All times UTC. AOI bboxes are [min_lon, min_lat, max_lon, max_lat].
 #
 # landfall_time_utc: first CONUS landfall from the NHC Tropical Cyclone Report, cross-checked against the first
-#   best-track point over CONUS land (src/floodalpha/flood/nhc.py derive(); agrees within one 6-h step for every
+#   best-track point over CONUS land (src/quantcomm/flood/nhc.py derive(); agrees within one 6-h step for every
 #   storm except Sally and Ian, whose first land point is a Florida/Keys crossing before the main landfall).
 # aoi_bbox: analyst-chosen box around the storm's main flood footprint (surge + rain). It is deliberately
 #   smaller than the 34-kt wind swath (which for Helene/Irma covers > 500,000 km2) to keep SAR processing

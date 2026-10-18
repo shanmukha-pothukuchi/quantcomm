@@ -16,8 +16,8 @@ import pandas as pd
 import yfinance as yf
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from floodalpha import config  # noqa: E402
-from floodalpha.banks.fdic import sod_year  # noqa: E402
+from quantcomm import config  # noqa: E402
+from quantcomm.banks.fdic import sod_year  # noqa: E402
 
 # (company, ticker, pattern, match_on, notes). match_on: "hc" = NAMEHCR, "bank" = NAMEFULL (no holding company)
 CANDIDATES = [

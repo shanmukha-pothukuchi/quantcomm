@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from floodalpha.agent import evidence
+from quantcomm.agent import evidence
 
 
 def _payload() -> dict:

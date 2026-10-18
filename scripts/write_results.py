@@ -12,7 +12,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from floodalpha import config  # noqa: E402
+from quantcomm import config  # noqa: E402
 
 P = config.DATA_PROCESSED
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from floodalpha.flood.catalog import _scene_key, select_pair
+from quantcomm.flood.catalog import _scene_key, select_pair
 
 
 def test_scene_key_matches_mpc_and_cdse_names():

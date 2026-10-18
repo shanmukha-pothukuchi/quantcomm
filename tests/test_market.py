@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodalpha.market.event_study import car, event_day0, market_model
+from quantcomm.market.event_study import car, event_day0, market_model
 
 DAYS = pd.bdate_range("2026-10-01", "2026-10-30")  # weekdays; close enough to NYSE days for these checks
 

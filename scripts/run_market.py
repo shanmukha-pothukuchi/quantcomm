@@ -4,7 +4,7 @@ import json, logging, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from floodalpha.market import backtest, event_study, prices  # noqa: E402
+from quantcomm.market import backtest, event_study, prices  # noqa: E402
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")

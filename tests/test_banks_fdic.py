@@ -2,7 +2,7 @@
 import pandas as pd
 import pytest
 
-from floodalpha.banks.fdic import _normalize, sod_vintage_for
+from quantcomm.banks.fdic import _normalize, sod_vintage_for
 
 
 def _raw(rows):

@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodalpha import config
-from floodalpha.nessie.stress import apply_stress
+from quantcomm import config
+from quantcomm.nessie.stress import apply_stress
 
 
 @pytest.fixture

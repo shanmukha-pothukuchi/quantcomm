@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodalpha.market import signals as sg
+from quantcomm.market import signals as sg
 
 IDX = pd.bdate_range("2019-01-01", periods=800)
 CFG = {"defaults": {"bank": "flood_deposits", "etf": "benchmark", "insurer": "weather_alerts"},
