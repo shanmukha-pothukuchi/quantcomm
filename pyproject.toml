@@ -26,6 +26,11 @@ dependencies = [
   "matplotlib",
   "pyogrio",
   "tqdm",
+  "pystac-client",
+  "planetary-computer",
+  "rioxarray",
+  "xarray",
+  "altair",
 ]
 
 [project.optional-dependencies]
