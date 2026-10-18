@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard · FloodAlpha</title>
+<meta name="description" content="FloodAlpha dashboard: Sentinel-1 flood maps, live flood alerts, bank exposure, market test and validation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/dashboard.css">
+</head>
+<body class="dash">
+
+<header class="nav">
+  <a class="brand" href="/" aria-label="FloodAlpha home">
+    <span class="brand-mark" aria-hidden="true"><span></span></span>FloodAlpha
+  </a>
+  <nav class="nav-links" id="nav-links" aria-label="Pages">
+    <a href="/">Home</a>
+    <a href="/dashboard" aria-current="page">Dashboard</a>
+    <a href="/stocks">Stocks</a>
+  </nav>
+  <a class="btn btn-ghost nav-cta" href="/stocks">Bank stocks</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+    <span></span><span></span>
+  </button>
+</header>
+
+<main class="dash-main">
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Dashboard views"></nav>
+  <div id="view" class="view" aria-live="polite"></div>
+</main>
+
+<footer class="dash-foot">
+  <span>Every number comes from <code>data/processed/</code>; missing outputs say which script makes them. Capital One portfolio figures are SYNTHETIC. Not investment advice.</span>
+  <a href="/api/docs">API</a>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="/assets/nav.js"></script>
+<script type="module" src="/assets/dash/app.js"></script>
+</body>
+</html>

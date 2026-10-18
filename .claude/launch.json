@@ -2,22 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "floodalpha-dashboard",
-      "runtimeExecutable": ".venv/bin/streamlit",
-      "runtimeArgs": ["run", "app/app.py", "--server.headless", "true", "--server.port", "8501"],
-      "port": 8501
-    },
-    {
-      "name": "floodalpha-dashboard-8502",
-      "runtimeExecutable": ".venv/bin/streamlit",
-      "runtimeArgs": ["run", "app/app.py", "--server.headless", "true", "--server.port", "8502"],
-      "port": 8502
-    },
-    {
-      "name": "floodalpha-landing",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8600", "--bind", "127.0.0.1"],
-      "port": 8600
+      "name": "floodalpha-web",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "floodalpha.web",
+        "--port",
+        "8000",
+        "--reload"
+      ],
+      "port": 8000
     }
   ]
 }

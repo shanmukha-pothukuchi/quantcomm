@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloodAlpha</title>
+<meta name="description" content="Free radar satellites map US storm flooding within days. FloodAlpha measures every bank's exposure, stress-tests a synthetic Capital One portfolio, and tests whether the market prices it in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <a class="brand" href="#top" aria-label="FloodAlpha home">
+    <span class="brand-mark" aria-hidden="true"><span></span></span>FloodAlpha
+  </a>
+  <nav class="nav-links" id="nav-links" aria-label="Sections">
+    <a href="#how">How it works</a>
+    <a href="#tools">Tools</a>
+    <a href="#results">Results</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/stocks">Stocks</a>
+  </nav>
+  <a class="btn btn-ghost nav-cta" href="/dashboard">Open dashboard</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+    <span></span><span></span>
+  </button>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <p class="eyebrow reveal"><span class="dot"></span>Sentinel-1 radar · every FDIC bank · built at Technica 2026</p>
+  <h1 class="reveal">See the Flood <span class="muted">Before the Filings.</span></h1>
+  <p class="lede reveal">Banks don't know their flood exposure for weeks after a storm. Free radar satellites can estimate it within days. We measure it for every US bank, stress-test a Capital One portfolio, and test whether the market prices it in.</p>
+  <div class="hero-ctas reveal">
+    <a class="btn btn-glow" href="/dashboard">Open the dashboard <span aria-hidden="true">→</span></a>
+    <a class="btn btn-ghost" href="/stocks">See the stocks</a>
+  </div>
+
+  <div class="hero-stage reveal" aria-label="Illustration: deposit columns partly submerged under a radar-mapped waterline">
+    <div class="stage-grid"></div>
+    <div class="bars" id="bars"></div>
+    <div class="water">
+      <svg class="wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 20 Q 75 4 150 20 T 300 20 T 450 20 T 600 20 T 750 20 T 900 20 T 1050 20 T 1200 20 V40 H0Z"/>
+      </svg>
+    </div>
+    <div class="scanline" aria-hidden="true"></div>
+    <div class="stage-chip chip-tl"><span class="pulse"></span>Isaias 2026 · Cat 2 · Destin, FL</div>
+    <div class="stage-chip chip-tr mono">VV Δ ≤ −3 dB</div>
+    <div class="stage-center">
+      <span class="radar-btn" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 L19 6"/></svg>
+      </span>
+      <span class="stage-center-label">First radar map published <b>28 h</b> after landfall</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="stats reveal" aria-label="Key numbers">
+  <div class="stat"><b>12</b><span>hurricanes mapped, Harvey 2017 → Isaias 2026</span></div>
+  <div class="stat"><b>4,249–6,068</b><span>FDIC banks scored per storm</span></div>
+  <div class="stat"><b>161,960</b><span>NFIP claims used for validation</span></div>
+  <div class="stat"><b>3–119 h</b><span>landfall to first published radar pass</span></div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="section" id="how">
+  <h2 class="center reveal">How <span class="muted">FloodAlpha</span> Works</h2>
+  <div class="steps">
+    <article class="step reveal">
+      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M4 18 L12 6 L20 18"/><path d="M8 18 L12 12 L16 18"/></svg></div>
+      <span class="step-num">Step 1</span>
+      <h3>A radar pass lands</h3>
+      <p>Sentinel-1 sees through storm cloud. The Copernicus <em>publication</em> time of the first post-storm image is our event clock, so nothing downstream peeks ahead.</p>
+    </article>
+    <article class="step reveal">
+      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M3 14 Q 7.5 10 12 14 T 21 14"/><path d="M3 19 Q 7.5 15 12 19 T 21 19"/><path d="M12 3 V10"/></svg></div>
+      <span class="step-num">Step 2</span>
+      <h3>Water gets mapped</h3>
+      <p>Post-minus-pre backscatter change on matching orbits, with permanent water and steep slopes masked out. Output: a flood mask, polygons and tract-level percent flooded.</p>
+    </article>
+    <article class="step reveal">
+      <div class="step-icon"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg></div>
+      <span class="step-num">Step 3</span>
+      <h3>Exposure gets scored</h3>
+      <p>Every bank's share of deposits within 500 m of mapped flooding, using the Summary of Deposits vintage published before the storm.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ TOOLS BENTO ============ -->
+<section class="section" id="tools">
+  <div class="section-head reveal">
+    <h2><span class="light">Explore Our</span><br>Six Lenses on a Storm</h2>
+    <a class="btn btn-ghost btn-sm" href="/dashboard">Try the dashboard</a>
+  </div>
+
+  <div class="bento">
+    <!-- Flood map -->
+    <article class="card rim-rose reveal">
+      <div class="card-copy">
+        <h3>Flood Map</h3>
+        <p>Before/after Sentinel-1 imagery, the change-detection mask and its polygons for any storm in the catalogue.</p>
+        <a class="more" href="/dashboard#case">Learn more <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="mock mock-sar">
+        <div class="sar-pane"><span class="tag">Pre · orbit 19 asc</span><div class="sar sar-pre"></div></div>
+        <div class="sar-pane"><span class="tag">Post · flood mask</span><div class="sar sar-post"><i></i><i></i><i></i><i></i></div></div>
+      </div>
+    </article>
+
+    <!-- Bank exposure -->
+    <article class="card rim-lime reveal">
+      <div class="card-copy">
+        <h3>Bank Exposure</h3>
+        <p>Share of each bank's deposits in flooded branches, for every FDIC-insured bank, storm by storm.</p>
+        <a class="more" href="/dashboard#banks">Learn more <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="mock">
+        <div class="mock-title">Banks with flooded deposits</div>
+        <ul class="hbars" aria-label="Banks with flooded deposits by storm">
+          <li><span>Irma 2017</span><i style="--v:27"></i><b>27</b></li>
+          <li><span>Harvey 2017</span><i style="--v:13"></i><b>13</b></li>
+          <li><span>Milton 2024</span><i style="--v:2"></i><b>2</b></li>
+          <li><span>Michael 2018</span><i style="--v:1"></i><b>1</b></li>
+          <li><span>Laura 2020</span><i style="--v:1"></i><b>1</b></li>
+        </ul>
+        <p class="mock-foot">Other seven storms: 0. Most first-pass maps catch little standing water.</p>
+      </div>
+    </article>
+
+    <!-- Stress test -->
+    <article class="card rim-blue reveal">
+      <div class="card-copy">
+        <h3>Capital One Stress Test <span class="badge-synth">SYNTHETIC</span></h3>
+        <p>500 generated customers created in the Nessie sandbox, incomes drawn from ACS tract medians. Expected loss = EAD × PD × LGD.</p>
+        <a class="more" href="/dashboard#case">Learn more <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="mock mock-kpis">
+        <div><span>Exposure at default</span><b>$23.4 M</b></div>
+        <div><span>Baseline expected loss</span><b>$438 k</b></div>
+        <div><span>Incremental loss, Isaias</span><b class="teal">$0 k</b></div>
+        <p class="mock-foot">Nessie's branch footprint is MD/VA/DC, so 0 of 220 locations sat in Isaias flooding.</p>
+      </div>
+    </article>
+
+    <!-- Market test -->
+    <article class="card rim-amber reveal">
+      <div class="card-copy">
+        <h3>Market Test</h3>
+        <p>Event-study abnormal returns vs KRE, a cross-section with storm fixed effects, and a long-short backtest.</p>
+        <a class="more" href="/dashboard#market">Learn more <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="mock">
+        <div class="mock-title">CAR per pct of flooded deposits <span class="verdict">Null result</span></div>
+        <div class="diverge" aria-label="Regression coefficients: CAR 0 to 1 is minus 0.741, CAR 0 to 5 is minus 1.073, CAR 0 to 20 is plus 3.503 percentage points">
+          <div class="dv"><span>[0, +1]</span><div class="track"><i class="neg" style="--v:0.741"></i></div><b>−0.74 pp</b></div>
+          <div class="dv"><span>[0, +5]</span><div class="track"><i class="neg" style="--v:1.073"></i></div><b>−1.07 pp</b></div>
+          <div class="dv"><span>[0, +20]</span><div class="track"><i class="pos" style="--v:3.503"></i></div><b>+3.50 pp</b></div>
+        </div>
+        <p class="mock-foot">Sign flips across windows on ~19 non-zero observations. We don't believe it, and say so.</p>
+      </div>
+    </article>
+
+    <!-- Validation -->
+    <article class="card rim-green reveal">
+      <div class="card-copy">
+        <h3>Validation</h3>
+        <p>Tract-level percent flooded against OpenFEMA NFIP claims across 10 storms, thresholds tuned on training storms only.</p>
+        <a class="more" href="/dashboard#validation">Learn more <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="mock">
+        <div class="mock-title">AUC: does the tract have claims?</div>
+        <div class="auc">
+          <div class="auc-row"><span>SAR flood map</span><div class="track"><i style="--v:0.54"></i></div><b>0.54</b></div>
+          <div class="auc-row dim"><span>County declared</span><div class="track"><i style="--v:0.51"></i></div><b>0.51</b></div>
+        </div>
+        <div class="mini-kpis">
+          <div><b>0.12</b><span>Spearman ρ</span></div>
+          <div><b>0.48</b><span>precision</span></div>
+          <div><b>0.06</b><span>recall</span></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Live -->
+    <article class="card rim-teal reveal" id="live">
+      <div class="card-copy">
+        <h3>Live Mode</h3>
+        <p>Active NWS flood alerts and NHC storms become pre-event exposure for every bank, plus when the next radar pass lands.</p>
+        <a class="more" href="/dashboard#live">Learn more <span aria-hidden="true">›</span></a>
+      </div>
+      <div class="mock mock-live">
+        <div class="mock-title">Active alerts <span class="mono stamp">snapshot 2026-10-18 03:23 UTC</span></div>
+        <div class="nodes" aria-label="19 CONUS flood-type alerts by type">
+          <svg class="links" viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M40 30 L150 60 L260 25 M150 60 L80 100 M150 60 L230 98 M40 30 L80 100"/>
+          </svg>
+          <span class="node n1">Coastal Flood Advisory <b>7</b></span>
+          <span class="node n2">Coastal Flood Watch <b>5</b></span>
+          <span class="node n3">Flood Warning <b>4</b></span>
+          <span class="node n4">Coastal Flood Warning <b>2</b></span>
+          <span class="node n5">Flash Flood Warning <b>1</b></span>
+        </div>
+        <div class="mini-kpis">
+          <div><b>50</b><span>banks under an alert</span></div>
+          <div><b>$40.8 bn</b><span>deposits in those branches</span></div>
+          <div><b>Oct 19</b><span>next pass, 00:20 UTC</span></div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section class="section" id="results">
+  <h2 class="center reveal"><span class="light">Read the Results.</span> Honestly.</h2>
+  <p class="sub center reveal">Twelve storms, one pipeline. Pick a metric to compare them.</p>
+
+  <div class="toggle reveal" role="tablist" aria-label="Storm metric">
+    <button role="tab" aria-selected="true" data-metric="km2">Flooded km²</button>
+    <button role="tab" aria-selected="false" data-metric="hours">Hours to first radar map</button>
+    <button role="tab" aria-selected="false" data-metric="cov">AOI coverage</button>
+  </div>
+
+  <div class="results-grid">
+    <article class="panel reveal">
+      <div class="panel-head">
+        <span id="metric-label">Flooded area from the first post-storm passes</span>
+        <span class="mono stamp">generated 2026-10-17 21:55 UTC</span>
+      </div>
+      <ul class="storm-chart" id="storm-chart"></ul>
+    </article>
+
+    <article class="panel panel-accent reveal">
+      <span class="pill-tag">Verdict</span>
+      <h3>The radar works. The alpha doesn't, yet.</h3>
+      <ul class="checks">
+        <li>Flood maps are weakly but consistently informative: AUC 0.54 vs a 0.51 baseline, held-out score 0.607 after tuning.</li>
+        <li>Only ~19 of ~1,400 storm-bank pairs carry non-zero satellite exposure, so the market test has little to work with.</li>
+        <li>The long-short backtest made 2 trades and lost on both (−0.70 % at 5 days, −1.04 % at 20 days, 10 bp/side).</li>
+      </ul>
+      <p class="fine">A clean null is still a result. Every threshold, PD uplift and buffer is justified in <a href="/dashboard#method">the methodology</a>.</p>
+    </article>
+  </div>
+
+  <div class="guarantees reveal">
+    <span><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>Lookahead-free event time</span>
+    <span><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>Pre-storm deposit vintage</span>
+    <span><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>Held-out storms for tuning</span>
+    <span><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>Synthetic data always labelled</span>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta">
+  <div class="cta-glow" aria-hidden="true"></div>
+  <h2 class="reveal"><span class="light">Ready to See</span> the Storm<br>Differently?</h2>
+  <p class="reveal">Explore every storm, the live alerts and the bank stocks in one place.</p>
+  <div class="cta-row reveal">
+    <a class="btn btn-ghost" href="/stocks">Bank stocks</a>
+    <a class="btn btn-glow" href="/dashboard">Launch dashboard <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><span></span></span>FloodAlpha</a>
+      <p>Satellite flood exposure for every US bank.</p>
+    </div>
+    <div class="foot-cols">
+      <div><h4>Dashboard</h4><a href="/dashboard#case">Storm case study</a><a href="/dashboard#live">Live</a><a href="/dashboard#banks">Bank exposure</a><a href="/dashboard#market">Market test</a><a href="/dashboard#validation">Validation</a><a href="/stocks">Stocks</a></div>
+      <div><h4>Data</h4><span>Sentinel-1 RTC</span><span>FDIC Summary of Deposits</span><span>OpenFEMA NFIP</span><span>Capital One Nessie</span><span>NWS · NHC</span></div>
+      <div><h4>Project</h4><a href="/dashboard#method">Methodology</a><a href="/api/docs">API</a></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>The Capital One portfolio is synthetic (Nessie sandbox). Research prototype, not investment advice.</span>
+    <span>© 2026 FloodAlpha · Technica</span>
+  </div>
+</footer>
+
+<script src="/assets/nav.js"></script>
+<script src="/assets/landing.js"></script>
+</body>
+</html>

@@ -45,7 +45,7 @@ floodalpha/
     market/              # prices, event study, long-short backtest
     live/                # NHC / NWS alert ingestion for active events
     exposure.py          # flood mask x branches -> bank exposure scores
-  app/                   # Streamlit dashboard
+  web/                   # web app pages + assets (served by src/floodalpha/web, FastAPI)
   scripts/               # verify_sources.py, run_storm.py, run_all.py
   tests/
   data/{raw,processed}/
@@ -53,7 +53,7 @@ floodalpha/
   README.md
 ```
 
-Python 3.11+. Suggested libs: `earthengine-api`, `geemap`, `geopandas`, `shapely`, `rasterio`, `pandas`, `pyarrow`, `requests`, `yfinance`, `statsmodels`, `streamlit`, `folium` or `pydeck`, `python-dotenv`, `pytest`.
+Python 3.11+. Suggested libs: `earthengine-api`, `geemap`, `geopandas`, `shapely`, `rasterio`, `pandas`, `pyarrow`, `requests`, `yfinance`, `statsmodels`, `fastapi` + `uvicorn` (web app; Leaflet maps in the browser), `python-dotenv`, `pytest`.
 
 ---
 
@@ -122,7 +122,7 @@ For historical storms, aggregate the flood mask to ZIP code or census tract (% a
 
 ### Milestone 6 — Demo polish
 
-Streamlit app with tabs:
+Web app (FastAPI + static pages: `/` landing, `/dashboard`, `/stocks`; replaced the original Streamlit app 2026-10-18) with tabs:
 - **Isaias case study** — before/after slider, flood map, Capital One branches/ATMs, stress test results.
 - **Live** — current alerts and exposure.
 - **Bank exposure** — sortable table of every public bank's exposure by storm.
