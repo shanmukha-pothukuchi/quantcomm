@@ -1,0 +1,45 @@
+# All modeling parameters. Every entry must have a justification in ASSUMPTIONS.md.
+flood:
+  backend: mpc                     # mpc = Microsoft Planetary Computer sentinel-1-rtc (no auth); gee = Earth Engine (needs auth)
+  collection: sentinel-1-rtc
+  polarization: VV
+  resolution_m: 40                 # overview level 2 of 10 m RTC COGs (4x decimation)
+  speckle_filter_px: 3             # focal median window in pixels
+  pre_images_per_orbit: 2          # median of the last N pre-storm passes on the same orbit
+  max_days_after: 10               # use every orbit whose first post-landfall pass is within this many days
+  search_days_before: 30           # catalog window starts this many days before landfall
+  diff_db_threshold: -3.0          # post - pre in dB; below this = new water candidate
+  post_db_max: -15.0               # post backscatter must also be dark (open water) in dB
+  permanent_water_occurrence_pct: 50   # JRC GSW occurrence >= this is masked as permanent water
+  max_slope_deg: 5.0               # mask steep terrain (radar shadow / layover)
+  min_cluster_px: 8                # remove connected components smaller than this (8 px * 1600 m2 = 1.28 ha)
+  dem_collection: nasadem
+  gsw_collection: jrc-gsw
+exposure:
+  buffer_m: 500                    # branch/ATM counted as exposed if within this distance of flood polygon
+  branch_crs: "EPSG:5070"          # equal-area CONUS Albers for distance calcs
+portfolio:
+  n_customers: 500
+  affected_share: 0.6              # share of customers placed in FEMA-declared counties; rest = control
+  seed: 20261009
+  nickname_prefix: FLOODALPHA_
+  income_sigma: 0.5                # lognormal sigma of customer income around the tract median
+  checking_months_of_income: 1.0   # checking balance ~ lognormal around 1 month income
+  savings_months_of_income: 2.0
+  loan_amount_months_of_income: 6.0
+  loan_rate_pct: 9.5
+  loan_term_months: 48
+  monthly_bills_share_of_income: 0.35
+stress:
+  baseline_pd_12m: 0.025           # baseline 12-month probability of default, unsecured consumer
+  flooded_pd_multiplier: 3.0       # PD uplift for customers in flooded tracts
+  flooded_tract_min_pct: 1.0       # tract counts as flooded if >= this % of its area is in the flood mask
+  lgd: 0.75                        # loss given default, unsecured consumer
+  flooded_withdrawal_shock_pct: 25 # % of checking withdrawn in the 30 days post-event
+  flooded_missed_bill_prob: 0.30   # probability a flooded customer misses the next bill
+  control_missed_bill_prob: 0.03
+  horizon_days: 90
+event_study:
+  estimation_window: [-250, -30]
+  car_windows: [[0, 1], [0, 5], [0, 20]]
+  benchmark: KRE

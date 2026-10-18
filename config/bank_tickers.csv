@@ -1,0 +1,115 @@
+company,ticker,namehcr_pattern,match_on,rssdhcr,matched_name_2024,deposits_2024_k,notes,yf_days_2024,yf_name,yf_name_ok,yf_ok,status
+JPMorgan Chase & Co.,JPM,^JPMORGAN CHASE,hc,1039502,JPMORGAN CHASE & CO.,2008751500.0,,251,JPMorgan Chase & Co.,True,True,active
+Bank of America Corp.,BAC,^BANK OF AMERICA CORP,hc,1073757,BANK OF AMERICA CORPORATION,1913493650.0,,251,Bank of America Corporation,True,True,active
+Wells Fargo & Co.,WFC,^WELLS FARGO & CO,hc,1120754,WELLS FARGO & COMPANY,1416232562.0,,251,Wells Fargo & Company,True,True,active
+Citigroup Inc.,C,^CITIGROUP,hc,1951350,CITIGROUP INC.,743363000.0,,251,Citigroup Inc.,True,True,active
+U.S. Bancorp,USB,^U\.?S\.? BANCORP,hc,1119794,U.S. BANCORP,527189102.0,,251,U.S. Bancorp,True,True,active
+PNC Financial Services Group,PNC,^PNC FINANCIAL,hc,1069778,"PNC FINANCIAL SERVICES GROUP, INC., THE",422760181.0,,251,"The PNC Financial Services Group, Inc.",True,True,active
+Truist Financial Corp.,TFC,^TRUIST FINANCIAL|^BB&T CORP,hc,1074156,TRUIST FINANCIAL CORPORATION,397412000.0,BB&T renamed Truist Dec 2019; yfinance TFC carries BB&T history,251,Truist Financial Corporation,True,True,active
+Capital One Financial Corp.,COF,^CAPITAL ONE FINANCIAL,hc,2277860,CAPITAL ONE FINANCIAL CORPORATION,372464078.0,,251,Capital One Financial Corporation,True,True,active
+Goldman Sachs Group,GS,^GOLDMAN SACHS GROUP,hc,2380443,"GOLDMAN SACHS GROUP, INC., THE",356889000.0,no retail branches,251,"The Goldman Sachs Group, Inc.",True,True,active
+Morgan Stanley,MS,^MORGAN STANLEY$,hc,2162966,MORGAN STANLEY,360762000.0,no retail branches,251,Morgan Stanley,True,True,active
+Bank of New York Mellon,BNY,^BANK OF NEW YORK MELLON,hc,3587146,"BANK OF NEW YORK MELLON CORPORATION, THE",227849261.0,ticker changed BK -> BNY in 2025; yfinance BNY carries full history,251,The Bank of New York Mellon Corporation,True,True,active
+State Street Corp.,STT,^STATE STREET CORP,hc,1111435,STATE STREET CORPORATION,179519000.0,,251,State Street Corporation,True,True,active
+Charles Schwab Corp.,SCHW,^CHARLES SCHWAB CORP,hc,1026632,"CHARLES SCHWAB CORPORATION, THE",252848000.0,,251,The Charles Schwab Corporation,True,True,active
+Fifth Third Bancorp,FITB,^FIFTH THIRD BANCORP,hc,1070345,FIFTH THIRD BANCORP,172042035.0,,251,Fifth Third Bancorp,True,True,active
+Huntington Bancshares,HBAN,^HUNTINGTON BANCSHARES,hc,1068191,HUNTINGTON BANCSHARES INCORPORATED,159226531.0,,251,Huntington Bancshares Incorporated,True,True,active
+Regions Financial Corp.,RF,^REGIONS FINANCIAL,hc,3242838,REGIONS FINANCIAL CORPORATION,128943000.0,,251,Regions Financial Corporation,True,True,active
+KeyCorp,KEY,^KEYCORP,hc,1068025,KEYCORP,149273809.0,,251,KeyCorp,True,True,active
+M&T Bank Corp.,MTB,^M&T BANK CORP,hc,1037003,M&T BANK CORPORATION,163695765.0,,251,M&T Bank Corporation,True,True,active
+Citizens Financial Group,CFG,^CITIZENS FINANCIAL GROUP,hc,1132449,"CITIZENS FINANCIAL GROUP, INC.",180066467.0,,251,"Citizens Financial Group, Inc.",True,True,active
+First Citizens BancShares,FCNCA,"^FIRST CITIZENS BANCSHARES, INC",hc,1075612,"FIRST CITIZENS BANCSHARES, INC.",151386795.0,,251,"First Citizens BancShares, Inc.",True,True,active
+Ally Financial,ALLY,^ALLY FINANCIAL,hc,1562859,ALLY FINANCIAL INC.,155556000.0,online bank,251,Ally Financial Inc.,True,True,active
+Zions Bancorporation,ZION,^ZIONS BANCORPORATION,bank,0,"Zions Bancorporation, N.A.",74224024.0,bank is the top-tier entity (no HC) since 2018,251,"Zions Bancorporation, National Association",True,True,active
+Comerica Inc.,CMA,^COMERICA INC,hc,1199844,COMERICA INCORPORATED,63611520.0,,0,,False,False,delisted
+Western Alliance Bancorporation,WAL,^WESTERN ALLIANCE BANCORP,hc,2349815,WESTERN ALLIANCE BANCORPORATION,66597571.0,,251,Western Alliance Bancorporation,True,True,active
+East West Bancorp,EWBC,^EAST WEST BANCORP,hc,2734233,"EAST WEST BANCORP, INC.",56986522.0,,251,"East West Bancorp, Inc.",True,True,active
+Synovus Financial Corp.,SNV,^SYNOVUS FINANCIAL,hc,1078846,SYNOVUS FINANCIAL CORP.,50744903.0,,0,,False,False,delisted
+Webster Financial Corp.,WBS,^WEBSTER FINANCIAL,hc,1145476,WEBSTER FINANCIAL CORPORATION,62593777.0,,0,Webster Financial Corp,True,False,delisted
+Valley National Bancorp,VLY,^VALLEY NATIONAL BANCORP,hc,1048773,VALLEY NATIONAL BANCORP,50325509.0,,251,Valley National Bancorp,True,True,active
+Pinnacle Financial Partners,PNFP,^PINNACLE FINANCIAL PARTNERS,hc,2925657,"PINNACLE FINANCIAL PARTNERS, INC.",39970180.0,,251,"Pinnacle Financial Partners, Inc.",True,True,active
+First Horizon Corp.,FHN,^FIRST HORIZON (NATIONAL )?CORP,hc,1094640,FIRST HORIZON CORPORATION,65403394.0,,251,First Horizon Corporation,True,True,active
+BOK Financial Corp.,BOKF,^BOK FINANCIAL,hc,1883693,BOK FINANCIAL CORPORATION,36520082.0,,251,BOK Financial Corporation,True,True,active
+Cullen/Frost Bankers,CFR,^CULLEN/FROST BANKERS,hc,1102367,"CULLEN/FROST BANKERS, INC.",40746370.0,,251,"Cullen/Frost Bankers, Inc.",True,True,active
+SouthState Corp.,SSB,^SOUTH ?STATE CORP,hc,1133437,SOUTHSTATE CORPORATION,37195443.0,merged with CenterState June 2020,251,SouthState Bank Corporation,True,True,active
+UMB Financial Corp.,UMBF,^UMB FINANCIAL,hc,1049828,UMB FINANCIAL CORPORATION,36685911.0,,251,UMB Financial Corporation,True,True,active
+Old National Bancorp,ONB,^OLD NATIONAL BANCORP,hc,1098303,OLD NATIONAL BANCORP,40443363.0,,251,Old National Bancorp,True,True,active
+Wintrust Financial Corp.,WTFC,^WINTRUST FINANCIAL,hc,2260406,WINTRUST FINANCIAL CORPORATION,49278157.0,,251,Wintrust Financial Corporation,True,True,active
+Commerce Bancshares,CBSH,^COMMERCE BANCSHARES,hc,1049341,"COMMERCE BANCSHARES, INC.",24687004.0,,251,"Commerce Bancshares, Inc.",True,True,active
+Prosperity Bancshares,PB,^PROSPERITY BANCSHARES,hc,1109599,"PROSPERITY BANCSHARES, INC.",28030434.0,,251,"Prosperity Bancshares, Inc.",True,True,active
+Hancock Whitney Corp.,HWC,^HANCOCK WHITNEY|^HANCOCK HOLDING,hc,1086533,HANCOCK WHITNEY CORPORATION,29457447.0,Hancock Holding renamed 2018,251,Hancock Whitney Corporation,True,True,active
+Associated Banc-Corp,ASB,^ASSOCIATED BANC-CORP,hc,1199563,ASSOCIATED BANC-CORP,32764058.0,,251,Associated Banc-Corp,True,True,active
+F.N.B. Corp.,FNB,^F\.N\.B\. CORP,hc,3005332,F.N.B. CORPORATION,35375939.0,,251,F.N.B. Corporation,True,True,active
+Bank OZK,OZK,^BANK OZK|^BANK OF THE OZARKS,bank,0,Bank OZK,29943663.0,bank is top-tier (no HC) since 2017,251,Bank OZK,True,True,active
+Popular Inc.,BPOP,"^POPULAR, INC",hc,1129382,"POPULAR, INC.",66038838.0,Puerto Rico + NY/FL,251,"Popular, Inc.",True,True,active
+Texas Capital Bancshares,TCBI,^TEXAS CAPITAL BANCSHARES,hc,2706735,"TEXAS CAPITAL BANCSHARES, INC.",23972045.0,,251,"Texas Capital Bancshares, Inc.",True,True,active
+Glacier Bancorp,GBCI,^GLACIER BANCORP,hc,2003975,"GLACIER BANCORP, INC.",20264352.0,,251,"Glacier Bancorp, Inc.",True,True,active
+First Financial Bankshares,FFIN,^FIRST FINANCIAL BANKSHARES,hc,1102312,"FIRST FINANCIAL BANKSHARES, INC.",11531350.0,Texas,251,"First Financial Bankshares, Inc.",True,True,active
+BankUnited Inc.,BKU,"^BANKUNITED, INC",hc,4028712,"BANKUNITED, INC.",28037211.0,,251,"BankUnited, Inc.",True,True,active
+United Bankshares,UBSI,^UNITED BANKSHARES,hc,1076217,"UNITED BANKSHARES, INC.",23305317.0,,251,"United Bankshares, Inc.",True,True,active
+Cadence Bank,CADE,^CADENCE BANK$,bank,0,Cadence Bank,37858658.0,BancorpSouth Bank (no HC) merged with Cadence Oct 2021 and kept ticker CADE; yfinance CADE history before Oct 2021 is BancorpSouth's (BXS),0,,False,False,delisted
+Simmons First National,SFNC,^SIMMONS FIRST NATIONAL,hc,1094828,SIMMONS FIRST NATIONAL CORPORATION,22121441.0,,251,Simmons First National Corporation,True,True,active
+Home BancShares,HOMB,^HOME BANCSHARES,hc,1491409,"HOME BANCSHARES, INC.",17460094.0,,251,"Home BancShares, Inc.",True,True,active
+Columbia Banking System,COLB,^COLUMBIA BANKING SYSTEM,hc,2078816,"COLUMBIA BANKING SYSTEM, INC.",41582018.0,,251,"Columbia Banking System, Inc.",True,True,active
+First Interstate BancSystem,FIBK,^FIRST INTERSTATE BANCSYSTEM,hc,1123670,"FIRST INTERSTATE BANCSYSTEM, INC.",23144335.0,,251,"First Interstate BancSystem, Inc.",True,True,active
+Ameris Bancorp,ABCB,^AMERIS BANCORP,hc,1082067,AMERIS BANCORP,21574192.0,,251,Ameris Bancorp,True,True,active
+United Community Banks,UCB,^UNITED COMMUNITY BANKS,hc,1249347,"UNITED COMMUNITY BANKS, INC.",23414583.0,ticker changed UCBI -> UCB in 2024,251,"United Community Banks, Inc.",True,True,active
+Seacoast Banking Corp. of Florida,SBCF,^SEACOAST BANKING CORP,hc,1085013,SEACOAST BANKING CORPORATION OF FLORIDA,12120841.0,,251,Seacoast Banking Corporation of Florida,True,True,active
+Trustmark Corp.,TRMK,^TRUSTMARK CORP,hc,1079562,TRUSTMARK CORPORATION,15540063.0,,251,Trustmark Corporation,True,True,active
+Renasant Corp.,RNST,^RENASANT CORP,hc,1098844,RENASANT CORPORATION,14422649.0,,251,Renasant Corporation,True,True,active
+ServisFirst Bancshares,SFBS,^SERVISFIRST BANCSHARES,hc,3635319,"SERVISFIRST BANCSHARES, INC.",13282876.0,,251,"ServisFirst Bancshares, Inc.",True,True,active
+Origin Bancorp,OBK,^ORIGIN BANCORP,hc,1885307,"ORIGIN BANCORP, INC.",8557838.0,,251,"Origin Bancorp, Inc.",True,True,active
+Capital City Bank Group,CCBG,^CAPITAL CITY BANK GROUP,hc,1085509,"CAPITAL CITY BANK GROUP, INC.",3684337.0,,251,"Capital City Bank Group, Inc.",True,True,active
+Veritex Holdings,VBTX,^VERITEX HOLDINGS,hc,4105266,"VERITEX HOLDINGS, INC.",10767429.0,,0,,False,False,delisted
+Independent Bank Group,IBTX,^INDEPENDENT BANK GROUP,hc,3140288,"INDEPENDENT BANK GROUP, INC.",15846465.0,,0,,False,False,delisted
+Stellar Bancorp,STEL,"^STELLAR BANCORP|^CBTX, INC",hc,3594872,STELLAR BANCORP INC.,8774463.0,CBTX + Allegiance merged Oct 2022,0,,False,False,delisted
+Business First Bancshares,BFST,^BUSINESS FIRST BANCSHARES,hc,3488850,"BUSINESS FIRST BANCSHARES, INC.",5580775.0,b1BANK,251,"Business First Bancshares, Inc.",True,True,active
+Home Bancorp,HBCP,"^HOME BANCORP, INC",hc,3851191,"HOME BANCORP, INC.",2727613.0,Louisiana,251,"Home Bancorp, Inc.",True,True,active
+Investar Holding,ISTR,^INVESTAR HOLDING,hc,4090054,INVESTAR HOLDING CORPORATION,2211493.0,,251,Investar Holding Corporation,True,True,active
+First Bancorp (NC),FBNC,^FIRST BANCORP$,hc,1076431,FIRST BANCORP,10509132.0,NC; NAMEHCR is just 'FIRST BANCORP' - resolved by rssdhcr 1076431,251,First Bancorp,True,True,active
+Live Oak Bancshares,LOB,^LIVE OAK BANCSHARES,hc,3884863,"LIVE OAK BANCSHARES, INC.",10785317.0,,251,"Live Oak Bancshares, Inc.",True,True,active
+Atlantic Union Bankshares,AUB,^ATLANTIC UNION BANKSHARES|^UNION BANKSHARES CORP,hc,1971693,ATLANTIC UNION BANKSHARES CORPORATION,20020244.0,renamed 2019,251,Atlantic Union Bankshares Corporation,True,True,active
+TowneBank,TOWN,^TOWNEBANK,bank,0,TowneBank,14402599.0,bank is top-tier (no HC),251,TowneBank,True,True,active
+International Bancshares,IBOC,^INTERNATIONAL BANCSHARES,hc,1104231,INTERNATIONAL BANCSHARES CORPORATION,12148297.0,Texas,251,International Bancshares Corporation,True,True,active
+Southside Bancshares,SBSI,^SOUTHSIDE BANCSHARES,hc,1245068,"SOUTHSIDE BANCSHARES, INC.",6502461.0,Texas,251,"Southside Bancshares, Inc.",True,True,active
+Amerant Bancorp,AMTB,^AMERANT BANCORP|^MERCANTIL BANK HOLDING,hc,1135972,AMERANT BANCORP INC.,7866471.0,Florida; renamed 2019,251,Amerant Bancorp Inc.,True,True,active
+Hilltop Holdings,HTH,^PLAINSCAPITAL BANK$,bank,0,PlainsCapital Bank,10421167.0,"PlainsCapital; SOD lists an intermediate LLC as HC, so matched on bank name",251,Hilltop Holdings Inc.,True,True,active
+Third Coast Bancshares,TCBX,^THIRD COAST BANCSHARES,hc,4475473,"THIRD COAST BANCSHARES, INC.",3858631.0,"Texas, IPO Nov 2021",251,"Third Coast Bancshares, Inc.",True,True,active
+Guaranty Bancshares,GNTY,^GUARANTY BANCSHARES,hc,1862036,"GUARANTY BANCSHARES, INC.",2626799.0,Texas,0,,False,False,delisted
+South Plains Financial,SPFI,^SOUTH PLAINS FINANCIAL,hc,2033226,"SOUTH PLAINS FINANCIAL, INC.",3719686.0,Texas,251,"South Plains Financial, Inc.",True,True,active
+Triumph Financial,TFIN,^TRIUMPH FINANCIAL|^TRIUMPH BANCORP,hc,3233126,"TRIUMPH FINANCIAL, INC.",4427499.0,Texas,251,"Triumph Financial, Inc.",True,True,active
+Colony Bankcorp,CBAN,^COLONY BANKCORP,hc,1085170,"COLONY BANKCORP, INC.",2484294.0,Georgia,251,"Colony Bankcorp, Inc.",True,True,active
+MetroCity Bankshares,MCBS,^METROCITY BANKSHARES,hc,4750086,"METROCITY BANKSHARES, INC.",2781178.0,Georgia,251,"MetroCity Bankshares, Inc.",True,True,active
+FB Financial Corp.,FBK,^FB FINANCIAL CORP,hc,1132104,FB FINANCIAL CORPORATION,10486032.0,Tennessee,251,FB Financial Corporation,True,True,active
+SmartFinancial,SMBK,^SMARTFINANCIAL,hc,1131497,"SMARTFINANCIAL, INC.",4323525.0,Tennessee,251,"SmartFinancial, Inc.",True,True,active
+HomeTrust Bancshares,HTBI,^HOMETRUST BANCSHARES,hc,4366003,"HOMETRUST BANCSHARES, INC.",3708389.0,NC,0,,False,False,delisted
+Peoples Bancorp of NC,PEBK,^PEOPLES BANCORP OF NORTH CAROLINA,hc,2818245,"PEOPLES BANCORP OF NORTH CAROLINA, INC.",1477523.0,,251,"Peoples Bancorp of North Carolina, Inc.",True,True,active
+First Community Bankshares,FCBC,^FIRST COMMUNITY BANKSHARES,hc,1478017,"FIRST COMMUNITY BANKSHARES, INC.",2711348.0,VA/NC/TN,251,"First Community Bankshares, Inc.",True,True,active
+Southern First Bancshares,SFST,^SOUTHERN FIRST BANCSHARES,hc,2849799,"SOUTHERN FIRST BANCSHARES, INC.",3477690.0,SC,251,"Southern First Bancshares, Inc.",True,True,active
+C&F Financial Corp.,CFFI,^C&F FINANCIAL,hc,2183493,C&F FINANCIAL CORPORATION,2117630.0,VA,251,C&F Financial Corporation,True,True,active
+Burke & Herbert Financial Services,BHRB,^BURKE & HERBERT,hc,5756704,BURKE & HERBERT FINANCIAL SERVICES CORP.,6663550.0,VA; listed 2023,251,Burke & Herbert Financial Services Corp.,True,True,active
+Primis Financial,FRST,^PRIMIS FINANCIAL|^SOUTHERN NATIONAL BANCORP OF VIRGINIA,hc,3325740,PRIMIS FINANCIAL CORP.,3369002.0,VA,251,Primis Financial Corp.,True,True,active
+Red River Bancshares,RRBI,^RED RIVER BANCORP,hc,1132243,"RED RIVER BANCORP, INC.",1529927.0,Louisiana,251,"Red River Bancshares, Inc.",True,True,active
+First Guaranty Bancshares,FGBI,^FIRST GUARANTY BANK$,bank,0,First Guaranty Bank,3050279.0,"Louisiana; SOD lists an intermediate LLC as HC, so matched on bank name",251,"First Guaranty Bancshares, Inc.",True,True,active
+First Bancshares (MS),FBMS,"^FIRST BANCSHARES, INC",hc,1204560,"FIRST BANCSHARES, INC.",7429174.0,acquired by Renasant Apr 2025; yfinance history through early 2025 only,0,,False,False,delisted
+Toronto-Dominion Bank,TD,^TORONTO-DOMINION BANK,hc,1238565,"TORONTO-DOMINION BANK, THE",317378575.0,NYSE ADR of Canadian parent; TD Bank US branches,251,The Toronto-Dominion Bank,True,True,active
+Bank of Montreal,BMO,^BANK OF MONTREAL,hc,1231333,BANK OF MONTREAL,206804226.0,NYSE ADR; BMO Harris / Bank of the West,251,Bank of Montreal,True,True,active
+Royal Bank of Canada,RY,^ROYAL BANK OF CANADA,hc,1232497,ROYAL BANK OF CANADA,82084803.0,NYSE ADR; City National,251,Royal Bank of Canada,True,True,active
+New York Community / Flagstar,FLG,^NEW YORK COMMUNITY BANCORP|^FLAGSTAR FINANCIAL,hc,2132932,"NEW YORK COMMUNITY BANCORP, INC.",79682020.0,"NYCB renamed Flagstar Financial, ticker FLG from Oct 2024; FL branches",251,"Flagstar Bank, National Association",True,True,active
+SunTrust Banks,STI,^SUNTRUST BANKS,hc,0,,0.0,DELISTED: merged into Truist Dec 2019 (was STI),251,"Solidion Technology, Inc.",False,False,delisted
+IBERIABANK Corp.,IBKC,^IBERIABANK CORP,hc,0,,0.0,DELISTED: merged into First Horizon July 2020 (was IBKC),0,,False,False,delisted
+CenterState Bank Corp.,CSFL,^CENTERSTATE BANK,hc,0,,0.0,DELISTED: merged into SouthState June 2020 (was CSFL),0,,False,False,delisted
+BancorpSouth Bank (pre-2021),BXS,"^BANCORPSOUTH, INC|^BANCORPSOUTH BANK$",bank,0,,0.0,see Cadence row; BXS ticker retired Oct 2021,0,,False,False,delisted
+Cadence Bancorporation (pre-2021),,^CADENCE BANCORPORATION,hc,0,,0.0,DELISTED as separate entity Oct 2021; ticker CADE continued under merged bank,0,,False,False,none
+TCF Financial,TCF,^TCF FINANCIAL,hc,0,,0.0,DELISTED: merged into Huntington June 2021,0,,False,False,delisted
+FCB Financial Holdings,FCB,^FCB FINANCIAL HOLDINGS,hc,0,,0.0,DELISTED: acquired by Synovus Jan 2019,0,,False,False,delisted
+Capital Bank Financial,CBF,^CAPITAL BANK FINANCIAL,hc,0,,0.0,DELISTED: acquired by First Horizon Nov 2017,0,,False,False,delisted
+State Bank Financial,STBZ,^STATE BANK FINANCIAL,hc,0,,0.0,DELISTED: acquired by Cadence Jan 2019,0,,False,False,delisted
+Green Bancorp,GNBC,^GREEN BANCORP,hc,0,,0.0,DELISTED: acquired by Veritex Jan 2019,0,,False,False,delisted
+LegacyTexas Financial,LTXB,^LEGACYTEXAS FINANCIAL,hc,0,,0.0,DELISTED: acquired by Prosperity Nov 2019,0,"LegacyTexas Financial Group, Inc.",True,False,delisted
+Fidelity Southern Corp.,LION,^FIDELITY SOUTHERN,hc,0,,0.0,DELISTED: acquired by Ameris July 2019,251,Lionsgate Studios Corp.,False,False,delisted
+Atlantic Capital Bancshares,ACBI,^ATLANTIC CAPITAL BANCSHARES,hc,0,,0.0,DELISTED: acquired by SouthState Mar 2022,0,,False,False,delisted
+Allegiance Bancshares,ABTX,^ALLEGIANCE BANCSHARES,hc,0,,0.0,DELISTED: merged into Stellar Oct 2022,0,,False,False,delisted
+MidSouth Bancorp,MSL,^MIDSOUTH BANCORP,hc,1136689,MIDSOUTH BANCORPORATION,623774.0,DELISTED: acquired by Hancock Whitney Sept 2019,0,,False,False,delisted
+Bank of the Ozarks (pre-2017 HC),,"^BANK OF THE OZARKS, INC",hc,0,,0.0,see Bank OZK row,0,,False,False,none
+First NBC Bank Holding,FNBC,^FIRST NBC BANK HOLDING,hc,0,,0.0,DELISTED: bank failed Apr 2017,0,,False,False,delisted

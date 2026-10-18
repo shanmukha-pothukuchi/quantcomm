@@ -1,0 +1,167 @@
+# Storm registry. All times UTC. AOI bboxes are [min_lon, min_lat, max_lon, max_lat].
+#
+# landfall_time_utc: first CONUS landfall from the NHC Tropical Cyclone Report, cross-checked against the first
+#   best-track point over CONUS land (src/floodalpha/flood/nhc.py derive(); agrees within one 6-h step for every
+#   storm except Sally and Ian, whose first land point is a Florida/Keys crossing before the main landfall).
+# aoi_bbox: analyst-chosen box around the storm's main flood footprint (surge + rain). It is deliberately
+#   smaller than the 34-kt wind swath (which for Helene/Irma covers > 500,000 km2) to keep SAR processing
+#   tractable. Banks outside the box get exposure 0 for that storm — a known limitation (ASSUMPTIONS.md).
+# fema: counties come from OpenFEMA DisasterDeclarationsSummaries matched on declarationTitle + year.
+# s1 search window: landfall - 30 d to landfall + max_days_after (model.yaml) unless overridden.
+defaults:
+  resolution_m: 80          # multi-storm runs; the Isaias case study overrides to 40 m
+storms:
+  harvey:
+    name: Harvey
+    year: 2017
+    nhc_id: al092017
+    landfall_time_utc: "2017-08-26T03:00:00Z"   # Cat 4, San Jose Island / Rockport TX
+    landfall_lat: 28.0
+    landfall_lon: -96.9
+    landfall_category: 4
+    aoi_bbox: [-97.8, 27.6, -93.5, 30.7]          # Coastal Bend through Houston to Beaumont
+    aoi_states: [TX, LA]
+    fema_title_match: HARVEY
+    notes: Catastrophic rain flooding in Houston Aug 27-30; surge at Rockport.
+  irma:
+    name: Irma
+    year: 2017
+    nhc_id: al112017
+    landfall_time_utc: "2017-09-10T13:00:00Z"   # Cat 4, Cudjoe Key FL
+    landfall_lat: 24.7
+    landfall_lon: -81.5
+    landfall_category: 4
+    aoi_bbox: [-83.0, 24.5, -80.0, 30.6]          # Keys and the whole peninsula incl. Jacksonville
+    aoi_states: [FL]
+    fema_title_match: IRMA
+    notes: Keys surge, SW Florida, record St. Johns River flooding in Jacksonville.
+  florence:
+    name: Florence
+    year: 2018
+    nhc_id: al062018
+    landfall_time_utc: "2018-09-14T11:15:00Z"   # Cat 1, Wrightsville Beach NC
+    landfall_lat: 34.2
+    landfall_lon: -77.8
+    landfall_category: 1
+    aoi_bbox: [-80.0, 33.5, -76.0, 35.8]          # eastern NC / NE SC
+    aoi_states: [NC, SC]
+    fema_title_match: FLORENCE
+    notes: Multi-day river flooding (Cape Fear, Lumber, Neuse); flooding peaked Sept 17-20.
+  michael:
+    name: Michael
+    year: 2018
+    nhc_id: al142018
+    landfall_time_utc: "2018-10-10T17:30:00Z"   # Cat 5, Mexico Beach FL
+    landfall_lat: 30.0
+    landfall_lon: -85.4
+    landfall_category: 5
+    aoi_bbox: [-86.5, 29.6, -83.5, 31.5]
+    aoi_states: [FL, GA, AL]
+    fema_title_match: MICHAEL
+    notes: Surge-dominated; wind damage also darkens SAR (debris) - interpret with care.
+  laura:
+    name: Laura
+    year: 2020
+    nhc_id: al132020
+    landfall_time_utc: "2020-08-27T06:00:00Z"   # Cat 4, Cameron LA
+    landfall_lat: 29.8
+    landfall_lon: -93.3
+    landfall_category: 4
+    aoi_bbox: [-94.5, 29.3, -92.0, 31.5]
+    aoi_states: [LA, TX]
+    fema_title_match: LAURA
+    notes: Surge in Cameron Parish; Lake Charles wind.
+  sally:
+    name: Sally
+    year: 2020
+    nhc_id: al192020
+    landfall_time_utc: "2020-09-16T09:45:00Z"   # Cat 2, Gulf Shores AL (best-track first land point is the FL TD crossing on Sept 12)
+    landfall_lat: 30.3
+    landfall_lon: -87.7
+    landfall_category: 2
+    aoi_bbox: [-88.6, 29.9, -85.5, 31.8]
+    aoi_states: [AL, FL]
+    fema_title_match: SALLY
+    notes: Slow mover; 20-30 in of rain, Pensacola and Escambia River flooding.
+  ida:
+    name: Ida
+    year: 2021
+    nhc_id: al092021
+    landfall_time_utc: "2021-08-29T16:55:00Z"   # Cat 4, Port Fourchon LA
+    landfall_lat: 29.1
+    landfall_lon: -90.2
+    landfall_category: 4
+    aoi_bbox: [-91.5, 28.9, -89.0, 30.8]
+    aoi_states: [LA]
+    fema_title_match: IDA
+    notes: Surge in Lafourche/Terrebonne; (Northeast rain flooding is outside the AOI).
+  ian:
+    name: Ian
+    year: 2022
+    nhc_id: al092022
+    landfall_time_utc: "2022-09-28T19:05:00Z"   # Cat 4, Cayo Costa FL (first best-track land point is Dry Tortugas)
+    landfall_lat: 26.7
+    landfall_lon: -82.2
+    landfall_category: 4
+    aoi_bbox: [-83.0, 25.5, -80.0, 29.5]
+    aoi_states: [FL]
+    fema_title_match: IAN
+    notes: Record surge Fort Myers; inland river flooding (Peace, Myakka) peaked days later.
+  idalia:
+    name: Idalia
+    year: 2023
+    nhc_id: al102023
+    landfall_time_utc: "2023-08-30T11:45:00Z"   # Cat 3, Keaton Beach FL
+    landfall_lat: 29.8
+    landfall_lon: -83.6
+    landfall_category: 3
+    aoi_bbox: [-85.0, 29.0, -82.0, 31.5]
+    aoi_states: [FL, GA]
+    fema_title_match: IDALIA
+    notes: Big Bend surge, sparse population.
+  helene:
+    name: Helene
+    year: 2024
+    nhc_id: al092024
+    landfall_time_utc: "2024-09-27T03:10:00Z"   # Cat 4, near Perry FL
+    landfall_lat: 30.1
+    landfall_lon: -83.8
+    landfall_category: 4
+    aoi_bbox: [-85.0, 29.0, -80.5, 36.3]          # Big Bend + Georgia + western Carolinas
+    aoi_states: [FL, GA, SC, NC, TN]
+    fema_title_match: HELENE
+    notes: Big Bend surge and catastrophic mountain flooding in western NC; steep terrain is slope-masked, so SAR under-detects there.
+  milton:
+    name: Milton
+    year: 2024
+    nhc_id: al142024
+    landfall_time_utc: "2024-10-10T00:30:00Z"   # Cat 3, Siesta Key FL
+    landfall_lat: 27.3
+    landfall_lon: -82.5
+    landfall_category: 3
+    aoi_bbox: [-83.2, 26.0, -80.0, 29.0]
+    aoi_states: [FL]
+    fema_title_match: MILTON
+    notes: Sarasota surge, Tampa Bay area rain, east-coast river flooding.
+  isaias:
+    name: Isaias
+    year: 2026
+    nhc_id: al092026               # verified: NHC best track AL092026 STORMNAME=ISAIAS
+    landfall_time_utc: "2026-10-10T01:30:00Z"   # Cat 2 near Destin FL (media; best-track 00Z point 30.2N 86.6W at 95 kt)
+    landfall_lat: 30.4
+    landfall_lon: -86.5
+    landfall_category: 2
+    peak_category: 3
+    aoi_bbox: [-88.6, 29.6, -83.5, 32.2]          # FL Panhandle + S Alabama + SW Georgia
+    aoi_states: [FL, AL, GA]
+    fema_disaster_numbers: [3655, 3656, 3657]
+    fema_title_match: ISAIAS
+    resolution_m: 40
+    s1_search_start: "2026-09-15"
+    s1_search_end: null
+    s1_relative_orbits: null
+    notes: >
+      First post-landfall Sentinel-1 pass is relative orbit 19 (ascending, Sentinel-1D) on 2026-10-10T23:45Z,
+      published 2026-10-11T05:38Z. Orbit 92 skipped its expected 2026-10-15 pass; orbit 121 passes
+      2026-10-17T23:36Z; orbit 165 on 2026-10-21. Re-run `run_storm.py --storm isaias --steps flood --force`
+      to pick up new passes.
